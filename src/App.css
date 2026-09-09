@@ -633,6 +633,9 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   color: var(--accent, #89b4fa);
 }
 
+.rice-viegphunt button.wb.net,
+.rice-viegphunt button.wb.bat,
+.rice-viegphunt button.wb.clock,
 .rice-viegphunt .wb.bt,
 .rice-viegphunt .wb.vol {
   background: transparent;
@@ -646,8 +649,90 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   line-height: inherit;
   color: inherit;
 }
+.rice-viegphunt button.wb.net:hover,
+.rice-viegphunt button.wb.bat:hover,
+.rice-viegphunt button.wb.clock:hover,
 .rice-viegphunt .wb.bt:hover,
 .rice-viegphunt .wb.vol:hover { background: rgba(255,255,255,0.06); }
+
+.rice-hakuspace button.haku-clock,
+.rice-hakuspace button.haku-mod {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-family: inherit;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+.rice-hakuspace button.haku-clock:hover,
+.rice-hakuspace button.haku-mod:hover {
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+}
+
+.rice-end4 button.end4-desk,
+.rice-end4 button.end4-ws-label,
+.rice-end4 button.end4-clock,
+.rice-end4 button.end4-ico {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+.rice-end4 button.end4-ico {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+  opacity: 0.9;
+  padding: 0 4px;
+}
+.rice-end4 button.end4-desk:hover,
+.rice-end4 button.end4-ws-label:hover,
+.rice-end4 button.end4-clock:hover,
+.rice-end4 button.end4-ico:hover {
+  opacity: 1;
+  color: #cbc4cb;
+}
+
+.rice-end4 button.end4-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.rice-end4 button.end4-card.end4-user-card {
+  display: flex;
+}
+.rice-end4 button.end4-card:hover {
+  border-color: color-mix(in srgb, #cbc4cb 40%, transparent);
+}
+
+.rice-end4 .end4-transport {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  letter-spacing: 0;
+}
+.rice-end4 .end4-transport-btn {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0.15rem 0.35rem;
+  opacity: 0.9;
+}
+.rice-end4 .end4-transport-btn:hover { opacity: 1; }
+
+/* clickable chrome cursor hint */
+.wb,
+.haku-mod,
+.end4-ico,
+.end4-card { cursor: pointer; }
 
 .rice-hakuspace .haku-ico {
   background: transparent;

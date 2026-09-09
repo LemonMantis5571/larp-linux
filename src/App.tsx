@@ -130,6 +130,10 @@ export default function App() {
   const [volMuted, setVolMuted] = useState(false)
   const [btOn, setBtOn] = useState(true)
   const [volLevel] = useState(42)
+  const [wifiOn, setWifiOn] = useState(true)
+  const [brightness, setBrightness] = useState(40)
+  const [musicPlaying, setMusicPlaying] = useState(false)
+  const [weatherTemp, setWeatherTemp] = useState(22)
   const [demoRunning, setDemoRunning] = useState(false)
   const [wsFlash, setWsFlash] = useState(false)
 
@@ -248,6 +252,60 @@ export default function App() {
     },
     [pushToast],
   )
+
+  const toggleWifi = useCallback(() => {
+    setWifiOn((v) => {
+      pushToast(v ? 'Wi-Fi off' : 'Wi-Fi on')
+      return !v
+    })
+  }, [pushToast])
+
+  const toggleVol = useCallback(() => {
+    setVolMuted((v) => {
+      pushToast(v ? `Volume ${volLevel}%` : 'Muted')
+      return !v
+    })
+  }, [pushToast, volLevel])
+
+  const toggleBt = useCallback(() => {
+    setBtOn((v) => {
+      pushToast(v ? 'Bluetooth off' : 'Bluetooth on')
+      return !v
+    })
+  }, [pushToast])
+
+  const cycleBrightness = useCallback(() => {
+    setBrightness((b) => {
+      const next = b === 40 ? 70 : b === 70 ? 100 : 40
+      pushToast(`Brightness ${next}%`)
+      return next
+    })
+  }, [pushToast])
+
+  const toastBattery = useCallback(() => {
+    pushToast('Battery 98% · AC (fake)')
+  }, [pushToast])
+
+  const openClock = useCallback(() => {
+    setShowLauncher(false)
+    setShowKeybinds(true)
+  }, [])
+
+  const cycleNextWorkspace = useCallback(() => {
+    const cur = (state.workspace ?? 1) as WorkspaceId
+    const next = ((cur % 4) + 1) as WorkspaceId
+    goWorkspace(next)
+  }, [state.workspace, goWorkspace])
+
+  const toastWeather = useCallback(() => {
+    setWeatherTemp((t) => {
+      const temps = [18, 22, 26, 29, 15, 31]
+      const idx = temps.indexOf(t)
+      const next = temps[(idx < 0 ? 0 : idx + 1) % temps.length]
+      pushToast(`${next}°C · still fake weather`)
+      return next
+    })
+  }, [pushToast])
 
   const openApp = useCallback((app: AppId) => {
     setState((s) => ({
@@ -840,31 +898,42 @@ export default function App() {
                 type="button"
                 className="wb bt"
                 title="Bluetooth (LARP)"
-                onClick={() => {
-                  setBtOn((v) => {
-                    pushToast(v ? 'Bluetooth off' : 'Bluetooth on')
-                    return !v
-                  })
-                }}
+                onClick={toggleBt}
               >
                 {btOn ? '󰂯' : '󰂲'}
               </button>
-              <span className="wb net">  LARP-NET</span>
-              <span className="wb bat"> 98%</span>
+              <button
+                type="button"
+                className="wb net"
+                title="Wi-Fi (LARP)"
+                onClick={toggleWifi}
+              >
+                {wifiOn ? '  LARP-NET' : '  off'}
+              </button>
+              <button
+                type="button"
+                className="wb bat"
+                title="Battery (LARP)"
+                onClick={toastBattery}
+              >
+                 98%
+              </button>
               <button
                 type="button"
                 className="wb vol"
                 title="Volume (LARP)"
-                onClick={() => {
-                  setVolMuted((v) => {
-                    pushToast(v ? `Volume ${volLevel}%` : 'Muted')
-                    return !v
-                  })
-                }}
+                onClick={toggleVol}
               >
                 {volMuted ? '󰝟' : ''}  {volMuted ? 'mute' : `${volLevel}%`}
               </button>
-              <span className="wb clock">{clock}</span>
+              <button
+                type="button"
+                className="wb clock"
+                title="Clock / keybinds"
+                onClick={openClock}
+              >
+                {clock}
+              </button>
             </div>
           </div>
         ) : isHaku ? (
@@ -900,15 +969,43 @@ export default function App() {
                 </div>
               </div>
               <div className="haku-island haku-center">
-                <span className="haku-clock">{clock}</span>
+                <button
+                  type="button"
+                  className="haku-clock"
+                  title="Clock / keybinds"
+                  onClick={openClock}
+                >
+                  {clock}
+                </button>
               </div>
               <div className="haku-island haku-right">
-                <span className="haku-mod"> 79%</span>
-                <span className="haku-mod"> 40%</span>
-                <span className="haku-mod">󰃠 81%</span>
-                <span className="haku-mod"></span>
-                <span className="haku-mod">󰂯</span>
-                <span className="haku-mod">⏻</span>
+                <button type="button" className="haku-mod" title="Battery (LARP)" onClick={toastBattery}>
+                   79%
+                </button>
+                <button type="button" className="haku-mod" title="Volume (LARP)" onClick={toggleVol}>
+                  {volMuted ? '󰝟' : ''} {volMuted ? 'mute' : `${volLevel}%`}
+                </button>
+                <button type="button" className="haku-mod" title="Brightness (LARP)" onClick={cycleBrightness}>
+                  󰃠 {brightness}%
+                </button>
+                <button type="button" className="haku-mod" title="Wi-Fi (LARP)" onClick={toggleWifi}>
+                  {wifiOn ? '' : '󰖪'}
+                </button>
+                <button type="button" className="haku-mod" title="Bluetooth (LARP)" onClick={toggleBt}>
+                  {btOn ? '󰂯' : '󰂲'}
+                </button>
+                <button
+                  type="button"
+                  className="haku-mod"
+                  title="Power (LARP)"
+                  onClick={() => {
+                    pushToast('wlogout · still larping')
+                    setShowKeybinds(false)
+                    setShowLauncher(true)
+                  }}
+                >
+                  ⏻
+                </button>
               </div>
             </div>
             <div className="haku-dock" aria-label="Hakuspace dock">
@@ -951,8 +1048,25 @@ export default function App() {
           <>
             <div className="end4-bar" aria-label="end4 floating bar">
               <div className="end4-left">
-                <span className="end4-desk">Desktop</span>
-                <span className="end4-ws-label">Workspace {workspace}</span>
+                <button
+                  type="button"
+                  className="end4-desk"
+                  title="Launcher"
+                  onClick={() => {
+                    setShowKeybinds(false)
+                    setShowLauncher(true)
+                  }}
+                >
+                  Desktop
+                </button>
+                <button
+                  type="button"
+                  className="end4-ws-label"
+                  title="Next workspace"
+                  onClick={cycleNextWorkspace}
+                >
+                  Workspace {workspace}
+                </button>
               </div>
               <div className="end4-center">
                 <div className="end4-ws">
@@ -968,34 +1082,75 @@ export default function App() {
                 </div>
               </div>
               <div className="end4-right">
-                <span className="end4-clock">{clock}</span>
-                <span className="end4-ico"></span>
-                <span className="end4-ico"></span>
+                <button type="button" className="end4-clock" title="Clock / keybinds" onClick={openClock}>
+                  {clock}
+                </button>
+                <button type="button" className="end4-ico" title="Wi-Fi (LARP)" onClick={toggleWifi}>
+                  {wifiOn ? '' : '󰖪'}
+                </button>
+                <button type="button" className="end4-ico" title="Volume (LARP)" onClick={toggleVol}>
+                  {volMuted ? '󰝟' : ''}
+                </button>
               </div>
             </div>
             <aside className="end4-sidebar" aria-label="end4 widgets">
-              <div className="end4-card end4-clock-card">
+              <button type="button" className="end4-card end4-clock-card" onClick={openClock} title="Keybinds">
                 <div className="end4-big-time">{ptime}</div>
                 <div className="end4-card-sub">{clock}</div>
-              </div>
-              <div className="end4-card end4-weather-card">
-                <div className="end4-weather-temp">22°C</div>
+              </button>
+              <button type="button" className="end4-card end4-weather-card" onClick={toastWeather} title="Weather (LARP)">
+                <div className="end4-weather-temp">{weatherTemp}°C</div>
                 <div className="end4-card-sub">partly cloudy · LARP City</div>
                 <div className="end4-weather-meta">💧 48% · 🌬 3 m/s</div>
-              </div>
-              <div className="end4-card end4-user-card">
-                <div className="end4-avatar">L</div>
+              </button>
+              <button
+                type="button"
+                className="end4-card end4-user-card"
+                title="User (LARP)"
+                onClick={() => pushToast(`Hi, ${state.identity.displayName}`)}
+              >
+                <div className="end4-avatar">{(state.identity.displayName || 'L').charAt(0).toUpperCase()}</div>
                 <div>
                   <div className="end4-hi">Hi, {state.identity.displayName}</div>
                   <div className="end4-card-sub">Good evening · visual LARP</div>
                 </div>
-              </div>
+              </button>
               <div className="end4-card end4-music-card">
                 <div className="end4-album" />
                 <div className="end4-track">
                   <div className="end4-song">LARP Anthem</div>
                   <div className="end4-card-sub">Fake Artist</div>
-                  <div className="end4-transport">⏮  ⏯  ⏭</div>
+                  <div className="end4-transport">
+                    <button
+                      type="button"
+                      className="end4-transport-btn"
+                      title="Previous"
+                      onClick={() => pushToast('⏮ skip back · still larping')}
+                    >
+                      ⏮
+                    </button>
+                    <button
+                      type="button"
+                      className="end4-transport-btn"
+                      title="Play/Pause"
+                      onClick={() => {
+                        setMusicPlaying((v) => {
+                          pushToast(v ? '⏸ paused (fake)' : '▶ playing (fake)')
+                          return !v
+                        })
+                      }}
+                    >
+                      {musicPlaying ? '⏸' : '⏯'}
+                    </button>
+                    <button
+                      type="button"
+                      className="end4-transport-btn"
+                      title="Next"
+                      onClick={() => pushToast('⏭ skip · next LARP track')}
+                    >
+                      ⏭
+                    </button>
+                  </div>
                 </div>
               </div>
             </aside>
