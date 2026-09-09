@@ -3,19 +3,22 @@ export type KeybindEntry = {
   action: string
 }
 
-/** Shown in Super+H / ? overlay — visual LARP only. */
+/**
+ * Prefer Ctrl over Super on Windows — Win+Space / Win+D / Win+1 are OS-owned
+ * and never reach the page.
+ */
 export const KEYBINDS: KeybindEntry[] = [
-  { keys: 'Super+1…4', action: 'Switch workspace' },
-  { keys: 'Click WS', action: 'Switch workspace (bar / dots)' },
-  { keys: 'Super+Space', action: 'Open launcher (rofi-like)' },
-  { keys: 'Super+D', action: 'Open launcher' },
-  { keys: 'Super+W', action: 'Wallpaper picker' },
+  { keys: 'Ctrl+1…4', action: 'Switch workspace' },
+  { keys: 'Click WS', action: 'Switch workspace (bar)' },
+  { keys: 'Ctrl+Space', action: 'Open launcher' },
+  { keys: 'Ctrl+;', action: 'Open launcher (alt)' },
+  { keys: 'Ctrl+Shift+W', action: 'Wallpaper picker' },
   { keys: 'Alt+← / →', action: 'Cycle wallpaper in pack' },
-  { keys: 'Super+H / ?', action: 'Keybind overlay' },
+  { keys: 'Ctrl+/  or  ?', action: 'Keybind overlay' },
   { keys: 'H', action: 'Toggle export bar (not in record mode)' },
-  { keys: 'R', action: 'Toggle record mode (hide bar + peek)' },
+  { keys: 'R', action: 'Toggle record mode' },
   { keys: 'Esc', action: 'Close overlay / exit record mode' },
-  { keys: 'Enter', action: 'Launch selected launcher item' },
+  { keys: 'Click 󰘔 / term on bar', action: 'Launcher / Terminal (Vieg)' },
   { keys: 'Type in terminal', action: 'Fake shell (clear, neofetch, ls…)' },
 ]
 
@@ -28,4 +31,9 @@ export function isTypingTarget(el: EventTarget | null): boolean {
 
 export function isSuper(e: KeyboardEvent): boolean {
   return e.metaKey || e.getModifierState?.('OS') === true
+}
+
+/** Mod chord that works in browser on Windows (Ctrl), still accepts Super. */
+export function isMod(e: KeyboardEvent): boolean {
+  return e.ctrlKey || isSuper(e)
 }

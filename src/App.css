@@ -813,3 +813,20 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   color: var(--accent, #f5c2e7);
   white-space: nowrap;
 }
+
+.rice-viegphunt button.wb {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-family: 'JetBrainsMono Nerd Font', ui-monospace, monospace;
+  font-weight: 700;
+}
+.rice-viegphunt button.wb.launch,
+.rice-viegphunt button.wb.term {
+  color: #cdd6f4;
+}
+.rice-viegphunt button.wb.launch:hover,
+.rice-viegphunt button.wb.term:hover {
+  color: #f5c2e7;
+}

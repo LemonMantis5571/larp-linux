@@ -7,7 +7,7 @@ import type { AppId, AppState, ExportPreset, Identity, Skin, Toast, WorkspaceId 
 import { WALLPAPERS, cycleWallpaper } from './wallpapers'
 import { cssBgUrl, hotlinkLikelyBlocked, normalizeWallUrl, probeImage } from './wallUrl'
 import { defaultPos, initialWorkspaces, switchWorkspace, WORKSPACE_IDS } from './workspaces'
-import { isSuper, isTypingTarget } from './keybinds'
+import { isTypingTarget } from './keybinds'
 import { runFakeCommand, type ShellContext } from './fakeShell'
 import { Launcher, type LauncherAction } from './Launcher'
 import { KeybindOverlay } from './KeybindOverlay'
@@ -394,11 +394,12 @@ export default function App() {
         return
       }
 
-      // Launcher
+      // Launcher — Ctrl+Space / Ctrl+; (Win+Space is stolen by Windows)
       if (
         !typing &&
-        isSuper(e) &&
-        (e.code === 'Space' || e.key === ' ' || e.key.toLowerCase() === 'd')
+        e.ctrlKey &&
+        !e.altKey &&
+        (e.code === 'Space' || e.key === ' ' || e.key === ';')
       ) {
         e.preventDefault()
         setShowKeybinds(false)
@@ -406,8 +407,11 @@ export default function App() {
         return
       }
 
-      // Keybind overlay Super+H or ?
-      if (!typing && ((isSuper(e) && e.key.toLowerCase() === 'h') || e.key === '?')) {
+      // Keybind overlay Ctrl+/ or ?
+      if (
+        !typing &&
+        ((e.ctrlKey && (e.key === '/' || e.code === 'Slash')) || e.key === '?')
+      ) {
         e.preventDefault()
         setShowLauncher(false)
         setShowKeybinds((v) => !v)
@@ -428,14 +432,15 @@ export default function App() {
         return
       }
 
-      // Workspaces Super+1..4
-      if (!typing && isSuper(e) && ['1', '2', '3', '4'].includes(e.key)) {
+      // Workspaces Ctrl+1..4 (Win+1..4 is taskbar)
+      if (!typing && e.ctrlKey && !e.altKey && ['1', '2', '3', '4'].includes(e.key)) {
         e.preventDefault()
         goWorkspace(Number(e.key) as WorkspaceId)
         return
       }
 
-      if (e.key.toLowerCase() === 'w' && isSuper(e)) {
+      // Walls: Ctrl+Shift+W (Ctrl+W closes the browser tab)
+      if (e.key.toLowerCase() === 'w' && e.ctrlKey && e.shiftKey) {
         e.preventDefault()
         if (hasWallPicker) setState((s) => ({ ...s, showWallPicker: !s.showWallPicker }))
         return
@@ -787,6 +792,28 @@ export default function App() {
               <span className="wb power" title="wlogout (fake)">
                 ⭘
               </span>
+              <button
+                type="button"
+                className="wb launch"
+                title="Launcher (Ctrl+Space)"
+                onClick={() => {
+                  setShowKeybinds(false)
+                  setShowLauncher(true)
+                }}
+              >
+                󰘔
+              </button>
+              <button
+                type="button"
+                className="wb term"
+                title="Terminal"
+                onClick={() => {
+                  openApp('terminal')
+                  setFocusedApp('terminal')
+                }}
+              >
+                
+              </button>
               <div className="workspaces">
                 {WORKSPACE_IDS.map((id) => (
                   <button
@@ -1148,7 +1175,7 @@ export default function App() {
             <div className="wall-picker-panel">
               <div className="wall-picker-head">
                 <span>  Walls</span>
-                <span className="wall-hint">Super+W · Esc</span>
+                <span className="wall-hint">Ctrl+Shift+W · Esc</span>
               </div>
               <div className="wall-grid">
                 {wallList.map((url) => {
@@ -1185,7 +1212,7 @@ export default function App() {
             <>
               <button
                 type="button"
-                title="Super+W"
+                title="Ctrl+Shift+W"
                 onClick={() => setState((s) => ({ ...s, showWallPicker: !s.showWallPicker }))}
               >
                 Walls
