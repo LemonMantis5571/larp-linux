@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toPng } from 'html-to-image'
 import { parseDots } from './dots'
-import { RICES, riceById, type RiceId } from './rices'
+import { HYPR_RICE_IDS, RICES, riceById, type RiceId } from './rices'
 import type { AppState, ExportPreset, Identity, Skin } from './types'
 import { WALLPAPERS, cycleWallpaper } from './wallpapers'
 import './App.css'
@@ -24,16 +24,34 @@ const skinWm: Record<Skin, string> = {
   kde: 'KWin (Plasma)',
 }
 
-function clockNow(viegStyle: boolean) {
-  if (!viegStyle) return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+type ClockStyle = 'plain' | 'vieg' | 'haku' | 'end4'
+
+function clockNow(style: ClockStyle) {
   const d = new Date()
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  const dd = String(d.getDate()).padStart(2, '0')
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const yyyy = d.getFullYear()
   const hh = String(d.getHours()).padStart(2, '0')
   const mi = String(d.getMinutes()).padStart(2, '0')
-  return `${days[d.getDay()]} ${dd}/${mm}/${yyyy} ~ ${hh}:${mi}`
+  const ss = String(d.getSeconds()).padStart(2, '0')
+  if (style === 'haku') {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ]
+    return `${hh}:${mi}:${ss}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+  }
+  if (style === 'end4') {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    return `${days[d.getDay()]}, ${dd}/${mm} • ${hh}:${mi}`
+  }
+  if (style === 'vieg') {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const dd = String(d.getDate()).padStart(2, '0')
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const yyyy = d.getFullYear()
+    return `${days[d.getDay()]} ${dd}/${mm}/${yyyy} ~ ${hh}:${mi}`
+  }
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
 function promptTime() {
@@ -83,24 +101,31 @@ export default function App() {
     dotsNote: '',
     openApps: ['terminal'],
     showWallPicker: false,
+    showExportBar: true,
   })
-  const [clock, setClock] = useState(() => clockNow(false))
+  const [clock, setClock] = useState(() => clockNow('plain'))
   const [ptime, setPtime] = useState(promptTime)
 
   const isVieg = state.rice === 'viegphunt' && state.skin === 'hyprland'
   const isMochaAlt = state.rice === 'mocha-alt' && state.skin === 'hyprland'
-  const isRiceDesktop = isVieg || isMochaAlt
+  const isViegLike = isVieg || isMochaAlt
+  const isHaku = state.rice === 'hakuspace' && state.skin === 'hyprland'
+  const isEnd4 = state.rice === 'end4' && state.skin === 'hyprland'
+  const isRiceDesktop = isViegLike || isHaku || isEnd4
   const pack = riceById(state.rice)
+  const hasWallPicker = pack.walls.length > 1
   const wallList = pack.walls.length ? pack.walls : WALLPAPERS.map((w) => w.url)
+  const clockStyle: ClockStyle = isHaku ? 'haku' : isEnd4 ? 'end4' : isViegLike ? 'vieg' : 'plain'
+  const useGhostty = isViegLike
 
   useEffect(() => {
     const t = setInterval(() => {
-      setClock(clockNow(isRiceDesktop))
+      setClock(clockNow(clockStyle))
       setPtime(promptTime())
     }, 1000)
-    setClock(clockNow(isRiceDesktop))
+    setClock(clockNow(clockStyle))
     return () => clearInterval(t)
-  }, [isRiceDesktop])
+  }, [clockStyle])
 
   useEffect(() => {
     setState((s) => ({
@@ -112,29 +137,45 @@ export default function App() {
   useEffect(() => {
     if (state.phase !== 'stage') return
     const onKey = (e: KeyboardEvent) => {
-      // Super+W (meta+w) toggles wallpaper picker when stage is active
+      const tag = (e.target as HTMLElement | null)?.tagName
+      const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+      if (!typing && (e.key === 'h' || e.key === 'H') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault()
+        setState((s) => ({ ...s, showExportBar: !s.showExportBar }))
+        return
+      }
       if (e.key.toLowerCase() === 'w' && e.metaKey) {
         e.preventDefault()
-        setState((s) => ({ ...s, showWallPicker: !s.showWallPicker }))
+        if (hasWallPicker) setState((s) => ({ ...s, showWallPicker: !s.showWallPicker }))
         return
       }
       if (state.showWallPicker && e.key === 'Escape') {
         setState((s) => ({ ...s, showWallPicker: false }))
         return
       }
-      if (isRiceDesktop && e.altKey && e.key === 'ArrowRight') {
+      if (hasWallPicker && e.altKey && e.key === 'ArrowRight') {
         setState((s) => ({ ...s, wallpaper: cycleInPack(s.wallpaper, wallList, 1) }))
       }
-      if (isRiceDesktop && e.altKey && e.key === 'ArrowLeft') {
+      if (hasWallPicker && e.altKey && e.key === 'ArrowLeft') {
         setState((s) => ({ ...s, wallpaper: cycleInPack(s.wallpaper, wallList, -1) }))
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [state.phase, state.showWallPicker, isRiceDesktop, wallList])
+  }, [state.phase, state.showWallPicker, hasWallPicker, wallList])
 
   const neofetchLines = useMemo(() => {
     const i = state.identity
+    const riceLine =
+      isVieg
+        ? [{ k: 'Rice', v: 'ViegPhunt (LARP)' }]
+        : isMochaAlt
+          ? [{ k: 'Rice', v: 'Mocha Alt (LARP pack)' }]
+          : isHaku
+            ? [{ k: 'Rice', v: 'Hakuspace (LARP)' }]
+            : isEnd4
+              ? [{ k: 'Rice', v: 'end4-pC (LARP)' }]
+              : []
     return [
       { k: 'OS', v: 'Arch Linux x86_64' },
       { k: 'Host', v: 'LARP Linux (not real)' },
@@ -143,23 +184,38 @@ export default function App() {
       { k: 'CPU', v: i.cpu },
       { k: 'GPU', v: i.gpu },
       { k: 'Memory', v: '64 GiB (fake)' },
-      { k: 'Terminal', v: 'ghostty' },
-      ...(isVieg ? [{ k: 'Rice', v: 'ViegPhunt (LARP)' }] : []),
-      ...(isMochaAlt ? [{ k: 'Rice', v: 'Mocha Alt (LARP pack)' }] : []),
+      { k: 'Terminal', v: isHaku ? 'kitty' : isEnd4 ? 'kitty' : 'ghostty' },
+      ...riceLine,
     ]
-  }, [state.identity, isVieg, isMochaAlt])
+  }, [state.identity, isVieg, isMochaAlt, isHaku, isEnd4])
 
   function applyRice(id: RiceId) {
     const next = riceById(id)
     setState((s) => ({
       ...s,
       rice: id,
-      skin: id === 'viegphunt' || id === 'mocha-alt' ? 'hyprland' : s.skin,
+      skin: HYPR_RICE_IDS.includes(id) ? 'hyprland' : s.skin,
       accent: next.accent,
       border: next.border,
       wallpaper: next.wallpaper,
       dotsText: next.dotsSample,
       dotsNote: next.credit || s.dotsNote,
+      showWallPicker: false,
+    }))
+  }
+
+  function quickLarp(id: RiceId) {
+    const next = riceById(id)
+    setState((s) => ({
+      ...s,
+      phase: 'setup',
+      rice: id,
+      skin: 'hyprland',
+      accent: next.accent,
+      border: next.border,
+      wallpaper: next.wallpaper,
+      dotsText: next.dotsSample,
+      dotsNote: next.credit,
       showWallPicker: false,
     }))
   }
@@ -232,31 +288,21 @@ export default function App() {
             <p className="eyebrow">LARP Linux</p>
             <h1>Fake Arch desktops for the timeline.</h1>
             <p>
-              Pick Hyprland, GNOME, or KDE. One-click ViegPhunt rice (visual only). Export a PNG.
+              Pick Hyprland, GNOME, or KDE. One-click rice packs (visual only). Export a PNG.
               You are not installing Arch. You are LARPing.
             </p>
             <div className="landing-actions">
               <button className="primary" onClick={() => setState((s) => ({ ...s, phase: 'setup' }))}>
                 Start LARPing
               </button>
-              <button
-                className="primary ghost"
-                onClick={() => {
-                  const next = riceById('viegphunt')
-                  setState((s) => ({
-                    ...s,
-                    phase: 'setup',
-                    rice: 'viegphunt',
-                    skin: 'hyprland',
-                    accent: next.accent,
-                    border: next.border,
-                    wallpaper: next.wallpaper,
-                    dotsText: next.dotsSample,
-                    dotsNote: next.credit,
-                  }))
-                }}
-              >
+              <button className="primary ghost" onClick={() => quickLarp('viegphunt')}>
                 LARP ViegPhunt
+              </button>
+              <button className="primary ghost haku-btn" onClick={() => quickLarp('hakuspace')}>
+                LARP Hakuspace
+              </button>
+              <button className="primary ghost end4-btn" onClick={() => quickLarp('end4')}>
+                LARP end4-pC
               </button>
             </div>
           </div>
@@ -291,6 +337,8 @@ export default function App() {
               <option value="default">Default</option>
               <option value="viegphunt">ViegPhunt Arch-Hyprland</option>
               <option value="mocha-alt">Mocha Alt (LARP pack)</option>
+              <option value="hakuspace">Hakuspace</option>
+              <option value="end4">end4-pC (Material 3)</option>
             </select>
           </label>
           <label>
@@ -370,7 +418,18 @@ export default function App() {
     )
   }
 
-  const riceClass = isVieg ? ' rice-viegphunt' : isMochaAlt ? ' rice-viegphunt rice-mocha-alt' : ''
+  const riceClass = isVieg
+    ? ' rice-viegphunt'
+    : isMochaAlt
+      ? ' rice-viegphunt rice-mocha-alt'
+      : isHaku
+        ? ' rice-hakuspace'
+        : isEnd4
+          ? ' rice-end4'
+          : ''
+
+  const showChrome = !exporting && state.showExportBar !== false
+  const showPeek = !exporting && state.showExportBar === false
 
   return (
     <div className="shell">
@@ -386,7 +445,7 @@ export default function App() {
           } as CSSProperties
         }
       >
-        {isRiceDesktop ? (
+        {isViegLike ? (
           <div className="panel waybar">
             <div className="panel-left">
               <span className="wb power" title="wlogout (fake)">
@@ -407,6 +466,110 @@ export default function App() {
               <span className="wb clock">{clock}</span>
             </div>
           </div>
+        ) : isHaku ? (
+          <>
+            <div className="haku-bar" aria-label="Hakuspace top bar">
+              <div className="haku-island haku-left">
+                <span className="haku-ico" title="search"></span>
+                <span className="haku-ico" title="settings"></span>
+                <div className="haku-ws">
+                  <span className="haku-pill" />
+                  <span className="haku-pill active" />
+                  <span className="haku-pill" />
+                  <span className="haku-pill" />
+                  <span className="haku-pill" />
+                </div>
+              </div>
+              <div className="haku-island haku-center">
+                <span className="haku-clock">{clock}</span>
+              </div>
+              <div className="haku-island haku-right">
+                <span className="haku-mod"> 79%</span>
+                <span className="haku-mod"> 40%</span>
+                <span className="haku-mod">󰃠 81%</span>
+                <span className="haku-mod"></span>
+                <span className="haku-mod">󰂯</span>
+                <span className="haku-mod">⏻</span>
+              </div>
+            </div>
+            <div className="haku-dock" aria-label="Hakuspace dock">
+              <button type="button" className="haku-dock-btn" title="launcher" aria-label="launcher">
+                󰕰
+              </button>
+              <button
+                type="button"
+                className={`haku-dock-btn${state.openApps.includes('terminal') ? ' on' : ''}`}
+                onClick={() => toggleApp('terminal')}
+                title="terminal"
+              >
+                
+              </button>
+              <button
+                type="button"
+                className={`haku-dock-btn${state.openApps.includes('files') ? ' on' : ''}`}
+                onClick={() => toggleApp('files')}
+                title="files"
+              >
+                
+              </button>
+              <button
+                type="button"
+                className={`haku-dock-btn${state.openApps.includes('browser') ? ' on' : ''}`}
+                onClick={() => toggleApp('browser')}
+                title="browser"
+              >
+                󰖟
+              </button>
+            </div>
+          </>
+        ) : isEnd4 ? (
+          <>
+            <div className="end4-bar" aria-label="end4 floating bar">
+              <div className="end4-left">
+                <span className="end4-desk">Desktop</span>
+                <span className="end4-ws-label">Workspace 1</span>
+              </div>
+              <div className="end4-center">
+                <div className="end4-ws">
+                  <span className="end4-dot active" />
+                  <span className="end4-dot" />
+                  <span className="end4-dot" />
+                  <span className="end4-dot" />
+                </div>
+              </div>
+              <div className="end4-right">
+                <span className="end4-clock">{clock}</span>
+                <span className="end4-ico"></span>
+                <span className="end4-ico"></span>
+              </div>
+            </div>
+            <aside className="end4-sidebar" aria-label="end4 widgets">
+              <div className="end4-card end4-clock-card">
+                <div className="end4-big-time">{ptime}</div>
+                <div className="end4-card-sub">{clock}</div>
+              </div>
+              <div className="end4-card end4-weather-card">
+                <div className="end4-weather-temp">22°C</div>
+                <div className="end4-card-sub">partly cloudy · LARP City</div>
+                <div className="end4-weather-meta">💧 48% · 🌬 3 m/s</div>
+              </div>
+              <div className="end4-card end4-user-card">
+                <div className="end4-avatar">L</div>
+                <div>
+                  <div className="end4-hi">Hi, {state.identity.displayName}</div>
+                  <div className="end4-card-sub">Good evening · visual LARP</div>
+                </div>
+              </div>
+              <div className="end4-card end4-music-card">
+                <div className="end4-album" />
+                <div className="end4-track">
+                  <div className="end4-song">LARP Anthem</div>
+                  <div className="end4-card-sub">Fake Artist</div>
+                  <div className="end4-transport">⏮  ⏯  ⏭</div>
+                </div>
+              </div>
+            </aside>
+          </>
         ) : (
           <div className="panel">
             <div className="panel-left">
@@ -430,7 +593,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Official ViegPhunt shots have NO desktop icons */}
+        {/* Official rice shots have NO desktop emoji icons */}
         {!isRiceDesktop && (
           <div className="icons">
             <button type="button" onClick={() => toggleApp('terminal')}>
@@ -449,13 +612,19 @@ export default function App() {
         <div className="windows">
           {state.openApps.includes('terminal') && (
             <FakeWindow
-              title={`${state.identity.username}@${state.identity.hostname}: ~`}
+              title={
+                isHaku
+                  ? `kitty — ${state.identity.username}@${state.identity.hostname}:~`
+                  : `${state.identity.username}@${state.identity.hostname}: ~`
+              }
               onClose={() => toggleApp('terminal')}
-              x={80}
-              y={90}
-              ghostty={isRiceDesktop}
+              x={isEnd4 ? 320 : 80}
+              y={isEnd4 ? 100 : 90}
+              ghostty={useGhostty}
+              kitty={isHaku}
+              soft={isEnd4}
             >
-              {isRiceDesktop ? (
+              {useGhostty ? (
                 <div className="ghostty-body">
                   <div className="neo-row">
                     <pre className="arch-ascii">{ARCH_ASCII}</pre>
@@ -499,7 +668,7 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <pre className="term">
+                <pre className={`term${isHaku ? ' kitty-term' : ''}`}>
                   {[
                     `${state.identity.username}@${state.identity.hostname}`,
                     '-----------------',
@@ -507,13 +676,22 @@ export default function App() {
                     '',
                     'you are not installing arch.',
                     'you are larping.',
+                    isHaku ? `\n[${ptime}] ❯ ` : '',
                   ].join('\n')}
                 </pre>
               )}
             </FakeWindow>
           )}
           {state.openApps.includes('browser') && (
-            <FakeWindow title="Firefox — New Tab" onClose={() => toggleApp('browser')} x={320} y={120} ghostty={isRiceDesktop}>
+            <FakeWindow
+              title="Firefox — New Tab"
+              onClose={() => toggleApp('browser')}
+              x={isEnd4 ? 560 : 320}
+              y={isEnd4 ? 140 : 120}
+              ghostty={useGhostty}
+              kitty={isHaku}
+              soft={isEnd4}
+            >
               <div className="browser">
                 <div className="browser-bar">https://wiki.archlinux.org/</div>
                 <div className="browser-body">Empty LARP browser. Looks busy. Does nothing.</div>
@@ -521,7 +699,15 @@ export default function App() {
             </FakeWindow>
           )}
           {state.openApps.includes('files') && (
-            <FakeWindow title="Home" onClose={() => toggleApp('files')} x={520} y={160} ghostty={isRiceDesktop}>
+            <FakeWindow
+              title="Home"
+              onClose={() => toggleApp('files')}
+              x={isEnd4 ? 720 : 520}
+              y={isEnd4 ? 180 : 160}
+              ghostty={useGhostty}
+              kitty={isHaku}
+              soft={isEnd4}
+            >
               <div className="files">
                 <div>📁 .config</div>
                 <div>📁 .local</div>
@@ -532,7 +718,7 @@ export default function App() {
           )}
         </div>
 
-        {state.showWallPicker && (
+        {state.showWallPicker && hasWallPicker && (
           <div
             className="wall-picker"
             role="dialog"
@@ -558,7 +744,7 @@ export default function App() {
                       title={name}
                     >
                       <img src={url} alt={name} loading="lazy" />
-                      <span>{name.replace(/\.(png|jpe?g|webp)$/i, '')}</span>
+                      <span>{name.replace(/\.(png|jpe?g|webp)$/i, '').slice(0, 40)}</span>
                     </button>
                   )
                 })}
@@ -568,10 +754,10 @@ export default function App() {
         )}
       </div>
 
-      {!exporting && (
+      {showChrome && (
         <div className="export-bar">
           <button onClick={() => setState((s) => ({ ...s, phase: 'setup' }))}>Setup</button>
-          {isRiceDesktop && (
+          {hasWallPicker && (
             <>
               <button
                 type="button"
@@ -603,7 +789,25 @@ export default function App() {
           <button onClick={() => exportPng('wide')} disabled={exporting}>
             Export wide
           </button>
+          <button
+            type="button"
+            title="Hotkey H"
+            onClick={() => setState((s) => ({ ...s, showExportBar: false }))}
+          >
+            Hide bar
+          </button>
         </div>
+      )}
+
+      {showPeek && (
+        <button
+          type="button"
+          className="export-peek"
+          title="Show bar (H)"
+          onClick={() => setState((s) => ({ ...s, showExportBar: true }))}
+        >
+          ▴ Show bar
+        </button>
       )}
     </div>
   )
@@ -616,6 +820,8 @@ function FakeWindow({
   x,
   y,
   ghostty,
+  kitty,
+  soft,
 }: {
   title: string
   children: import('react').ReactNode
@@ -623,12 +829,17 @@ function FakeWindow({
   x: number
   y: number
   ghostty?: boolean
+  kitty?: boolean
+  soft?: boolean
 }) {
   const [pos, setPos] = useState({ x, y })
   const drag = useRef<{ dx: number; dy: number } | null>(null)
+  const cls = ['window', ghostty ? 'ghostty' : '', kitty ? 'kitty' : '', soft ? 'soft-m3' : '']
+    .filter(Boolean)
+    .join(' ')
 
   return (
-    <div className={`window${ghostty ? ' ghostty' : ''}`} style={{ left: pos.x, top: pos.y }}>
+    <div className={cls} style={{ left: pos.x, top: pos.y }}>
       <div
         className="titlebar"
         onMouseDown={(e) => {

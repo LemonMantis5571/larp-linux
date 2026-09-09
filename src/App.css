@@ -356,3 +356,255 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+
+/* Landing quick buttons for new packs */
+.primary.ghost.haku-btn { color: #E8DCC8; border-color: #E8DCC8; }
+.primary.ghost.end4-btn { color: #cbc4cb; border-color: #cbc4cb; }
+
+/* Tiny peek when export bar hidden (outside stage — not in PNG export) */
+.export-peek {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 21;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(10,12,18,0.85);
+  border: 1px solid rgba(255,255,255,0.18);
+  opacity: 0.85;
+}
+
+/* —— Hakuspace: three floating islands + dock —— */
+.rice-hakuspace .panel { display: none; }
+.rice-hakuspace .haku-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent, #E8DCC8);
+}
+.rice-hakuspace .haku-island {
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 6px 18px;
+  margin-bottom: 5px;
+  box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.rice-hakuspace .haku-left { border-radius: 0 0 30px 0; }
+.rice-hakuspace .haku-center { border-radius: 0 0 30px 30px; }
+.rice-hakuspace .haku-right { border-radius: 0 0 0 30px; }
+.rice-hakuspace .haku-ico { padding: 0 6px; }
+.rice-hakuspace .haku-ws { display: flex; align-items: center; gap: 6px; margin-left: 4px; }
+.rice-hakuspace .haku-pill {
+  display: inline-block;
+  height: 8px;
+  width: 10px;
+  border-radius: 999px;
+  background: var(--accent, #E8DCC8);
+  opacity: 0.5;
+}
+.rice-hakuspace .haku-pill.active {
+  width: 40px;
+  opacity: 1;
+}
+.rice-hakuspace .haku-clock { letter-spacing: 0.02em; white-space: nowrap; }
+.rice-hakuspace .haku-mod { padding: 0 6px; white-space: nowrap; }
+
+.rice-hakuspace .haku-dock {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+}
+.rice-hakuspace .haku-dock-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--accent, #E8DCC8);
+  font-size: 1.15rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.rice-hakuspace .haku-dock-btn.on,
+.rice-hakuspace .haku-dock-btn:hover {
+  background: color-mix(in srgb, var(--accent, #E8DCC8) 22%, transparent);
+}
+
+.rice-hakuspace .windows { inset: 12px; top: 48px; bottom: 72px; }
+.rice-hakuspace .window {
+  border-radius: 16px;
+  border-width: 1px;
+  border-color: color-mix(in srgb, var(--accent, #E8DCC8) 55%, transparent);
+  background: rgba(12, 12, 14, 0.82);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+}
+.rice-hakuspace .window.kitty {
+  width: min(640px, 86vw);
+  min-height: 320px;
+}
+.rice-hakuspace .titlebar {
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--accent, #E8DCC8);
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+}
+.rice-hakuspace .kitty-term {
+  color: #E8DCC8;
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+}
+.rice-hakuspace .wall-picker-panel {
+  border-color: #E8DCC8;
+  background: rgba(0, 0, 0, 0.88);
+}
+.rice-hakuspace .wall-picker-head { color: #E8DCC8; }
+.rice-hakuspace .wall-thumb.active,
+.rice-hakuspace .wall-thumb:hover { border-color: #E8DCC8; }
+
+/* —— end4-pC Material 3 float bar + sidebar widgets —— */
+.rice-end4 .panel { display: none; }
+.rice-end4 .end4-bar {
+  position: absolute;
+  top: 14px;
+  left: 18px;
+  right: 18px;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.55rem 1.1rem;
+  background: color-mix(in srgb, #201f20 88%, transparent);
+  color: #e6e1e1;
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, #cbc4cb 28%, transparent);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  backdrop-filter: blur(14px);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+.rice-end4 .end4-left,
+.rice-end4 .end4-center,
+.rice-end4 .end4-right {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.rice-end4 .end4-desk { opacity: 0.85; }
+.rice-end4 .end4-ws-label { color: #cbc4cb; }
+.rice-end4 .end4-ws { display: flex; gap: 6px; align-items: center; }
+.rice-end4 .end4-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #e6e1e1 35%, transparent);
+}
+.rice-end4 .end4-dot.active {
+  width: 28px;
+  background: #cbc4cb;
+}
+.rice-end4 .end4-clock { white-space: nowrap; }
+.rice-end4 .end4-ico {
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+  opacity: 0.9;
+}
+
+.rice-end4 .end4-sidebar {
+  position: absolute;
+  top: 72px;
+  left: 18px;
+  width: min(280px, 32vw);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.rice-end4 .end4-card {
+  background: color-mix(in srgb, #201f20 90%, transparent);
+  color: #e6e1e1;
+  border-radius: 24px;
+  border: 1px solid color-mix(in srgb, #cbc4cb 18%, transparent);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+  backdrop-filter: blur(12px);
+  padding: 0.9rem 1rem;
+}
+.rice-end4 .end4-big-time {
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #cbc4cb;
+}
+.rice-end4 .end4-card-sub { opacity: 0.72; font-size: 0.85rem; margin-top: 0.2rem; }
+.rice-end4 .end4-weather-temp { font-size: 1.6rem; font-weight: 700; }
+.rice-end4 .end4-weather-meta { margin-top: 0.35rem; font-size: 0.8rem; opacity: 0.75; }
+.rice-end4 .end4-user-card { display: flex; gap: 0.75rem; align-items: center; }
+.rice-end4 .end4-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  background: color-mix(in srgb, #cbc4cb 35%, #141313);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #141313;
+}
+.rice-end4 .end4-hi { font-weight: 700; }
+.rice-end4 .end4-music-card { display: flex; gap: 0.75rem; align-items: center; }
+.rice-end4 .end4-album {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #cbc4cb, #141313);
+  flex: 0 0 auto;
+}
+.rice-end4 .end4-song { font-weight: 650; }
+.rice-end4 .end4-transport { margin-top: 0.35rem; letter-spacing: 0.2em; opacity: 0.85; }
+
+.rice-end4 .windows { inset: 18px; top: 72px; left: min(310px, 34vw); }
+.rice-end4 .window,
+.rice-end4 .window.soft-m3 {
+  border-radius: 24px;
+  border: 0;
+  background: color-mix(in srgb, #201f20 92%, transparent);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.4);
+  color: #e6e1e1;
+}
+.rice-end4 .titlebar {
+  background: color-mix(in srgb, #cbc4cb 12%, #201f20);
+  color: #e6e1e1;
+  border-bottom: 1px solid color-mix(in srgb, #cbc4cb 12%, transparent);
+}
+.rice-end4 .term { color: #e6e1e1; }
+.rice-end4 .wall-picker-panel {
+  border-color: #cbc4cb;
+  background: color-mix(in srgb, #201f20 94%, transparent);
+  border-radius: 24px;
+}
+.rice-end4 .wall-picker-head { color: #cbc4cb; }
+.rice-end4 .wall-thumb.active,
+.rice-end4 .wall-thumb:hover { border-color: #cbc4cb; }
