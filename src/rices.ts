@@ -1,6 +1,14 @@
 /** Visual-only rice packs. Never execute real configs. */
 
-import { wallpaperUrl, type WallpaperFile } from './wallpapers'
+import {
+  ALL_DOTFILE_WALLS,
+  END4_WALLS,
+  HAKU_SHOWCASE_WALLS,
+  VIEG_SHOWCASE_WALLS,
+  wallpaperUrl,
+  viegLocal,
+  EXTRA_LOCAL,
+} from './wallpapers'
 
 export type RiceId = 'default' | 'viegphunt' | 'mocha-alt' | 'hakuspace' | 'end4'
 
@@ -10,38 +18,12 @@ export type RicePack = {
   credit: string
   accent: string
   wallpaper: string
-  /** Ordered wallpaper URLs for this pack (picker + cycle). */
   walls: string[]
   border: string
   dotsSample: string
 }
 
-const VIEG_WALLS: WallpaperFile[] = [
-  'misty-seascape.jpg',
-  'black-and-white-anime-bartender-girl.png',
-  'bridge-sea-middle-mountains.jpg',
-  'deep-forest-with-wooden-stairs.png',
-  'fishing.jpg',
-  'kita.png',
-  'sea-horizon-sky.jpg',
-  'snow-covered-mountains-northern-india.jpg',
-]
-
-const viegWallUrls = VIEG_WALLS.map((f) => wallpaperUrl(f))
-
-const END4_DEFAULT_LOCAL = '/end4-default_wallpaper.png'
-const END4_DEFAULT_GH =
-  'https://raw.githubusercontent.com/pctrade/end4-pC/main/assets/images/default_wallpaper.png'
-const UNSplash_ANIME =
-  'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1920&q=80'
-const UNSplash_ABSTRACT =
-  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80'
-const UNSplash_WARM1 =
-  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1920&q=80'
-const UNSplash_WARM2 =
-  'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1920&q=80'
-const UNSplash_WARM3 =
-  'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=1920&q=80'
+const uniq = (xs: string[]) => [...new Set(xs)]
 
 export const RICES: Record<RiceId, RicePack> = {
   default: {
@@ -49,91 +31,59 @@ export const RICES: Record<RiceId, RicePack> = {
     label: 'Default Hypr',
     credit: '',
     accent: '#89b4fa',
-    wallpaper: UNSplash_ABSTRACT,
-    walls: [UNSplash_ABSTRACT],
+    wallpaper: wallpaperUrl('misty-seascape.jpg'),
+    walls: uniq([...ALL_DOTFILE_WALLS]),
     border: '#89b4fa',
     dotsSample: '',
   },
   viegphunt: {
     id: 'viegphunt',
     label: 'ViegPhunt (Arch-Hyprland)',
-    credit: 'LARP of github.com/ViegPhunt/Dotfiles — visual only, not installed',
+    credit:
+      'Walls: full ViegPhunt/Wallpaper-Collection (8) + showcases. Visual LARP only.',
     accent: '#f5c2e7',
     wallpaper: wallpaperUrl('misty-seascape.jpg'),
-    walls: [...viegWallUrls, '/walls/lisa-blackpink-4k.jpg'],
+    walls: uniq([...viegLocal, ...EXTRA_LOCAL, ...VIEG_SHOWCASE_WALLS, ...ALL_DOTFILE_WALLS]),
     border: '#cdd6f4',
     dotsSample: `/* ViegPhunt / Catppuccin Mocha — paste-only LARP sample */
 @define-color background #1e1e2e;
 @define-color foreground #cdd6f4;
 @define-color pink       #f5c2e7;
-@define-color blue       #89b4fa;
-/* hypr appearance */
 col.active_border = rgba(cdd6f4aa)
-col.inactive_border = rgba(595959aa)
 rounding = 2
-border_size = 2
-gaps_in = 2
-gaps_out = 5
 `,
   },
   'mocha-alt': {
     id: 'mocha-alt',
     label: 'Mocha Alt (LARP pack)',
-    credit: 'LARP pack — Catppuccin Mocha accent alt + Vieg wall collection (not official)',
+    credit: 'Same Vieg wall collection, blue accent',
     accent: '#89b4fa',
     wallpaper: wallpaperUrl('sea-horizon-sky.jpg'),
-    walls: [
-      wallpaperUrl('sea-horizon-sky.jpg'),
-      wallpaperUrl('fishing.jpg'),
-      wallpaperUrl('kita.png'),
-      wallpaperUrl('snow-covered-mountains-northern-india.jpg'),
-      wallpaperUrl('bridge-sea-middle-mountains.jpg'),
-      wallpaperUrl('deep-forest-with-wooden-stairs.png'),
-      wallpaperUrl('misty-seascape.jpg'),
-      wallpaperUrl('black-and-white-anime-bartender-girl.png'),
-    ],
+    walls: uniq([...viegLocal, ...ALL_DOTFILE_WALLS]),
     border: '#89b4fa',
-    dotsSample: `/* Mocha Alt LARP pack — blue accent */
-@define-color background #1e1e2e;
-@define-color blue       #89b4fa;
-col.active_border = rgba(89b4faaa)
-`,
+    dotsSample: `/* Mocha Alt */\n@define-color blue #89b4fa\n`,
   },
   hakuspace: {
     id: 'hakuspace',
     label: 'Hakuspace',
-    credit: 'LARP of github.com/hakuimaku/hakuspace — visual only, not installed',
+    credit:
+      'Hakuspace repo has no shipped walls (~/Pictures only). Bundled official README showcases + shared collection.',
     accent: '#E8DCC8',
-    wallpaper: END4_DEFAULT_LOCAL,
-    walls: [
-      END4_DEFAULT_LOCAL,
-      END4_DEFAULT_GH,
-      UNSplash_ANIME,
-      UNSplash_ABSTRACT,
-      wallpaperUrl('misty-seascape.jpg'),
-    ],
+    wallpaper: HAKU_SHOWCASE_WALLS[0],
+    walls: uniq([...HAKU_SHOWCASE_WALLS, ...ALL_DOTFILE_WALLS]),
     border: '#E8DCC8',
-    dotsSample: `/* Hakuspace LARP — cream accent islands */
-@define-color accent_color #E8DCC8;
-/* waybar islands: rgba(0,0,0,0.8); rounding bottoms 30px */
-rounding = 16
-`,
+    dotsSample: `/* Hakuspace LARP */\n@define-color accent_color #E8DCC8\n`,
   },
   end4: {
     id: 'end4',
     label: 'end4-pC (Material 3)',
-    credit: 'LARP of github.com/pctrade/end4-pC (illogical-impulse) — visual only, not installed',
+    credit:
+      'end4-pC ships default_wallpaper + README screenshots; plus shared Vieg/Haku walls.',
     accent: '#cbc4cb',
-    wallpaper: END4_DEFAULT_LOCAL,
-    walls: [END4_DEFAULT_LOCAL, END4_DEFAULT_GH, UNSplash_WARM1, UNSplash_WARM2, UNSplash_WARM3],
+    wallpaper: END4_WALLS[0],
+    walls: uniq([...END4_WALLS, ...ALL_DOTFILE_WALLS]),
     border: '#cbc4cb',
-    dotsSample: `/* end4-pC Material 3 LARP */
-m3primary=#cbc4cb
-m3background=#141313
-m3surfaceContainer=#201f20
-m3onBackground=#e6e1e1
-rounding = 24
-`,
+    dotsSample: `/* end4-pC M3 */\nm3primary=#cbc4cb\nm3background=#141313\n`,
   },
 }
 
@@ -141,5 +91,4 @@ export function riceById(id: RiceId): RicePack {
   return RICES[id] ?? RICES.default
 }
 
-/** Packs that force Hyprland skin when selected. */
 export const HYPR_RICE_IDS: RiceId[] = ['viegphunt', 'mocha-alt', 'hakuspace', 'end4']
