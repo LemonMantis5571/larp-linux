@@ -2,6 +2,8 @@ export type Skin = 'hyprland' | 'gnome' | 'kde'
 export type RiceId = 'default' | 'viegphunt' | 'mocha-alt' | 'hakuspace' | 'end4'
 export type ExportPreset = 'story' | 'square' | 'wide'
 export type Phase = 'landing' | 'setup' | 'stage'
+export type AppId = 'terminal' | 'browser' | 'files'
+export type WorkspaceId = 1 | 2 | 3 | 4
 
 export type Identity = {
   displayName: string
@@ -10,6 +12,18 @@ export type Identity = {
   cpu: string
   gpu: string
   wm: string
+}
+
+export type WindowPos = { x: number; y: number }
+
+export type WorkspaceSnap = {
+  openApps: AppId[]
+  positions: Partial<Record<AppId, WindowPos>>
+}
+
+export type Toast = {
+  id: number
+  message: string
 }
 
 export type AppState = {
@@ -22,9 +36,15 @@ export type AppState = {
   border: string
   dotsText: string
   dotsNote: string
-  openApps: Array<'terminal' | 'browser' | 'files'>
+  openApps: AppId[]
   /** Wallpaper picker overlay (packs with walls) */
   showWallPicker?: boolean
   /** Floating export/controls bar — hide for clean screenshots (H toggles) */
   showExportBar?: boolean
+  /** Active Hypr-style workspace 1–4 */
+  workspace?: WorkspaceId
+  /** Per-workspace open apps + window positions */
+  workspaces?: Record<WorkspaceId, WorkspaceSnap>
+  /** Record mode: hide export bar + peek for video */
+  recordMode?: boolean
 }

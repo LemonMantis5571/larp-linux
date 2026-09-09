@@ -1,10 +1,16 @@
 import type { CSSProperties } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toPng } from 'html-to-image'
 import { parseDots } from './dots'
 import { HYPR_RICE_IDS, RICES, riceById, type RiceId } from './rices'
-import type { AppState, ExportPreset, Identity, Skin } from './types'
+import type { AppId, AppState, ExportPreset, Identity, Skin, Toast, WorkspaceId } from './types'
 import { WALLPAPERS, cycleWallpaper } from './wallpapers'
+import { defaultPos, initialWorkspaces, switchWorkspace, WORKSPACE_IDS } from './workspaces'
+import { isSuper, isTypingTarget } from './keybinds'
+import { runFakeCommand, type ShellContext } from './fakeShell'
+import { Launcher, type LauncherAction } from './Launcher'
+import { KeybindOverlay } from './KeybindOverlay'
+import { ToastStack } from './ToastStack'
 import './App.css'
 
 const DEFAULT_WALL = RICES.default.wallpaper
@@ -84,10 +90,14 @@ const ARCH_ASCII = `                   -\`
    \`/ossssso+/:-        -:/+osssso+-
   \`+sso+:-\`                 \`.-/+oso:
  \`++:.                           \`-/+/
- .\`                                 \/`
+ .\`                                 \`/`
+
+let toastSeq = 1
 
 export default function App() {
   const stageRef = useRef<HTMLDivElement>(null)
+  const positionsRef = useRef<Partial<Record<AppId, { x: number; y: number }>>>({})
+  const demoTimers = useRef<number[]>([])
   const [exporting, setExporting] = useState(false)
   const [state, setState] = useState<AppState>({
     phase: 'landing',
@@ -102,9 +112,25 @@ export default function App() {
     openApps: ['terminal'],
     showWallPicker: false,
     showExportBar: true,
+    workspace: 1,
+    workspaces: initialWorkspaces(),
+    recordMode: false,
   })
   const [clock, setClock] = useState(() => clockNow('plain'))
   const [ptime, setPtime] = useState(promptTime)
+  const [showLauncher, setShowLauncher] = useState(false)
+  const [showKeybinds, setShowKeybinds] = useState(false)
+  const [toasts, setToasts] = useState<Toast[]>([])
+  const [focusedApp, setFocusedApp] = useState<AppId | null>('terminal')
+  const [termLines, setTermLines] = useState<string[]>([
+    'LARP shell ready. Type help — configs are never executed.',
+  ])
+  const [termInput, setTermInput] = useState('')
+  const [volMuted, setVolMuted] = useState(false)
+  const [btOn, setBtOn] = useState(true)
+  const [volLevel] = useState(42)
+  const [demoRunning, setDemoRunning] = useState(false)
+  const [wsFlash, setWsFlash] = useState(false)
 
   const isVieg = state.rice === 'viegphunt' && state.skin === 'hyprland'
   const isMochaAlt = state.rice === 'mocha-alt' && state.skin === 'hyprland'
@@ -117,6 +143,30 @@ export default function App() {
   const wallList = pack.walls.length ? pack.walls : WALLPAPERS.map((w) => w.url)
   const clockStyle: ClockStyle = isHaku ? 'haku' : isEnd4 ? 'end4' : isViegLike ? 'vieg' : 'plain'
   const useGhostty = isViegLike
+  const workspace = (state.workspace ?? 1) as WorkspaceId
+  const riceClassName = isVieg
+    ? ' rice-viegphunt'
+    : isMochaAlt
+      ? ' rice-viegphunt rice-mocha-alt'
+      : isHaku
+        ? ' rice-hakuspace'
+        : isEnd4
+          ? ' rice-end4'
+          : ''
+
+  const pushToast = useCallback((message: string) => {
+    const id = toastSeq++
+    setToasts((t) => [...t, { id, message }])
+    window.setTimeout(() => {
+      setToasts((t) => t.filter((x) => x.id !== id))
+    }, 2200)
+  }, [])
+
+  const stopDemo = useCallback(() => {
+    demoTimers.current.forEach((id) => window.clearTimeout(id))
+    demoTimers.current = []
+    setDemoRunning(false)
+  }, [])
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -134,35 +184,304 @@ export default function App() {
     }))
   }, [state.skin])
 
+  useEffect(() => () => stopDemo(), [stopDemo])
+
+  const shellCtx: ShellContext = useMemo(() => {
+    const riceLabel =
+      isVieg
+        ? 'ViegPhunt (LARP)'
+        : isMochaAlt
+          ? 'Mocha Alt (LARP pack)'
+          : isHaku
+            ? 'Hakuspace (LARP)'
+            : isEnd4
+              ? 'end4-pC (LARP)'
+              : 'Default'
+    return {
+      username: state.identity.username,
+      hostname: state.identity.hostname,
+      cwd: `/home/${state.identity.username}`,
+      riceLabel,
+      wm: state.identity.wm,
+      cpu: state.identity.cpu,
+      gpu: state.identity.gpu,
+      terminalName: isHaku || isEnd4 ? 'kitty' : 'ghostty',
+    }
+  }, [state.identity, isVieg, isMochaAlt, isHaku, isEnd4])
+
+  const runShellLine = useCallback(
+    (raw: string) => {
+      const out = runFakeCommand(raw, shellCtx)
+      if (out[0] === '__CLEAR__') {
+        setTermLines([])
+        return
+      }
+      setTermLines((lines) => [
+        ...lines,
+        `${shellCtx.username}@${shellCtx.hostname}:${shellCtx.cwd}$ ${raw}`,
+        ...out,
+      ])
+    },
+    [shellCtx],
+  )
+
+  const goWorkspace = useCallback(
+    (to: WorkspaceId) => {
+      setState((s) => {
+        const from = (s.workspace ?? 1) as WorkspaceId
+        if (from === to) return s
+        const workspaces = s.workspaces ?? initialWorkspaces()
+        const switched = switchWorkspace(workspaces, from, to, s.openApps, positionsRef.current)
+        positionsRef.current = { ...(switched.workspaces[to]?.positions ?? {}) }
+        return {
+          ...s,
+          workspace: to,
+          workspaces: switched.workspaces,
+          openApps: switched.openApps,
+        }
+      })
+      setWsFlash(true)
+      window.setTimeout(() => setWsFlash(false), 280)
+      pushToast(`Workspace ${to}`)
+      setFocusedApp(null)
+    },
+    [pushToast],
+  )
+
+  const openApp = useCallback((app: AppId) => {
+    setState((s) => ({
+      ...s,
+      openApps: s.openApps.includes(app) ? s.openApps : [...s.openApps, app],
+    }))
+    setFocusedApp(app)
+  }, [])
+
+  const toggleApp = useCallback((app: AppId) => {
+    setState((s) => {
+      const open = s.openApps.includes(app)
+      return {
+        ...s,
+        openApps: open ? s.openApps.filter((x) => x !== app) : [...s.openApps, app],
+      }
+    })
+    setFocusedApp((f) => (f === app ? null : app))
+  }, [])
+
+  const setWall = useCallback(
+    (url: string) => {
+      setState((s) => ({ ...s, wallpaper: url, showWallPicker: false }))
+      const name = url.split('/').pop() || 'wallpaper'
+      pushToast(`Wallpaper · ${name.replace(/\.(png|jpe?g|webp)$/i, '').slice(0, 28)}`)
+    },
+    [pushToast],
+  )
+
+  const handleLauncher = useCallback(
+    (id: LauncherAction) => {
+      setShowLauncher(false)
+      if (id === 'terminal' || id === 'browser' || id === 'files') {
+        openApp(id)
+        return
+      }
+      if (id === 'walls') {
+        if (hasWallPicker) setState((s) => ({ ...s, showWallPicker: true }))
+        else pushToast('No wall pack for this rice')
+        return
+      }
+      if (id === 'keybinds') {
+        setShowKeybinds(true)
+        return
+      }
+      if (id === 'settings') {
+        setState((s) => ({ ...s, phase: 'setup' }))
+      }
+    },
+    [hasWallPicker, openApp, pushToast],
+  )
+
+  const startDemo = useCallback(() => {
+    stopDemo()
+    setDemoRunning(true)
+    setShowLauncher(false)
+    setShowKeybinds(false)
+    setState((s) => ({ ...s, showWallPicker: false, recordMode: true, showExportBar: false }))
+    pushToast('Demo · recording loop')
+
+    const at = (ms: number, fn: () => void) => {
+      demoTimers.current.push(window.setTimeout(fn, ms))
+    }
+
+    at(600, () => setShowLauncher(true))
+    at(2200, () => {
+      setShowLauncher(false)
+      openApp('terminal')
+      setFocusedApp('terminal')
+    })
+    at(3000, () => setTermInput(''))
+    const word = 'neofetch'
+    word.split('').forEach((ch, i) => {
+      at(3200 + i * 90, () => setTermInput((v) => v + ch))
+    })
+    at(3200 + word.length * 90 + 350, () => {
+      setTermInput('')
+      runShellLine('neofetch')
+    })
+    at(9000, () => goWorkspace(2))
+    at(11500, () => {
+      setState((s) => {
+        const next = cycleInPack(s.wallpaper, wallList, 1)
+        const name = next.split('/').pop() || 'wallpaper'
+        pushToast(`Wallpaper · ${name.replace(/\.(png|jpe?g|webp)$/i, '').slice(0, 28)}`)
+        return { ...s, wallpaper: next }
+      })
+    })
+    at(16000, () => {
+      setDemoRunning(false)
+      pushToast('Demo complete')
+    })
+  }, [stopDemo, pushToast, openApp, runShellLine, goWorkspace, wallList])
+
   useEffect(() => {
     if (state.phase !== 'stage') return
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement | null)?.tagName
-      const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
-      if (!typing && (e.key === 'h' || e.key === 'H') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      const typing = isTypingTarget(e.target)
+      const overlayOpen = showLauncher || showKeybinds || !!state.showWallPicker
+
+      // Record mode toggle / exit
+      if (!typing && (e.key === 'r' || e.key === 'R') && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault()
-        setState((s) => ({ ...s, showExportBar: !s.showExportBar }))
+        setState((s) => {
+          const next = !s.recordMode
+          return { ...s, recordMode: next, showExportBar: next ? false : s.showExportBar }
+        })
         return
       }
-      if (e.key.toLowerCase() === 'w' && e.metaKey) {
+
+      if (state.recordMode && e.key === 'Escape' && !overlayOpen) {
         e.preventDefault()
-        if (hasWallPicker) setState((s) => ({ ...s, showWallPicker: !s.showWallPicker }))
+        setState((s) => ({ ...s, recordMode: false }))
         return
       }
+
+      if (showKeybinds && e.key === 'Escape') {
+        e.preventDefault()
+        setShowKeybinds(false)
+        return
+      }
+
       if (state.showWallPicker && e.key === 'Escape') {
         setState((s) => ({ ...s, showWallPicker: false }))
         return
       }
+
+      // Launcher
+      if (
+        !typing &&
+        isSuper(e) &&
+        (e.code === 'Space' || e.key === ' ' || e.key.toLowerCase() === 'd')
+      ) {
+        e.preventDefault()
+        setShowKeybinds(false)
+        setShowLauncher((v) => !v)
+        return
+      }
+
+      // Keybind overlay Super+H or ?
+      if (!typing && ((isSuper(e) && e.key.toLowerCase() === 'h') || e.key === '?')) {
+        e.preventDefault()
+        setShowLauncher(false)
+        setShowKeybinds((v) => !v)
+        return
+      }
+
+      // Export bar H (not record mode, not Super)
+      if (
+        !typing &&
+        !state.recordMode &&
+        (e.key === 'h' || e.key === 'H') &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey
+      ) {
+        e.preventDefault()
+        setState((s) => ({ ...s, showExportBar: !s.showExportBar }))
+        return
+      }
+
+      // Workspaces Super+1..4
+      if (!typing && isSuper(e) && ['1', '2', '3', '4'].includes(e.key)) {
+        e.preventDefault()
+        goWorkspace(Number(e.key) as WorkspaceId)
+        return
+      }
+
+      if (e.key.toLowerCase() === 'w' && isSuper(e)) {
+        e.preventDefault()
+        if (hasWallPicker) setState((s) => ({ ...s, showWallPicker: !s.showWallPicker }))
+        return
+      }
+
       if (hasWallPicker && e.altKey && e.key === 'ArrowRight') {
-        setState((s) => ({ ...s, wallpaper: cycleInPack(s.wallpaper, wallList, 1) }))
+        e.preventDefault()
+        setState((s) => {
+          const next = cycleInPack(s.wallpaper, wallList, 1)
+          return { ...s, wallpaper: next }
+        })
+        pushToast('Wallpaper next')
+        return
       }
       if (hasWallPicker && e.altKey && e.key === 'ArrowLeft') {
-        setState((s) => ({ ...s, wallpaper: cycleInPack(s.wallpaper, wallList, -1) }))
+        e.preventDefault()
+        setState((s) => {
+          const next = cycleInPack(s.wallpaper, wallList, -1)
+          return { ...s, wallpaper: next }
+        })
+        pushToast('Wallpaper prev')
+        return
+      }
+
+      // Fake shell when terminal focused and no overlay
+      if (
+        !overlayOpen &&
+        focusedApp === 'terminal' &&
+        state.openApps.includes('terminal') &&
+        !typing
+      ) {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          const line = termInput
+          setTermInput('')
+          runShellLine(line)
+          return
+        }
+        if (e.key === 'Backspace') {
+          e.preventDefault()
+          setTermInput((v) => v.slice(0, -1))
+          return
+        }
+        if (e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey) {
+          e.preventDefault()
+          setTermInput((v) => v + e.key)
+        }
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [state.phase, state.showWallPicker, hasWallPicker, wallList])
+  }, [
+    state.phase,
+    state.showWallPicker,
+    state.recordMode,
+    state.openApps,
+    hasWallPicker,
+    wallList,
+    showLauncher,
+    showKeybinds,
+    focusedApp,
+    termInput,
+    goWorkspace,
+    runShellLine,
+    pushToast,
+  ])
 
   const neofetchLines = useMemo(() => {
     const i = state.identity
@@ -269,15 +588,8 @@ export default function App() {
     }
   }
 
-  function toggleApp(app: 'terminal' | 'browser' | 'files') {
-    setState((s) => ({
-      ...s,
-      openApps: s.openApps.includes(app) ? s.openApps.filter((x) => x !== app) : [...s.openApps, app],
-    }))
-  }
-
-  function setWall(url: string) {
-    setState((s) => ({ ...s, wallpaper: url, showWallPicker: false }))
+  function rememberPos(app: AppId, pos: { x: number; y: number }) {
+    positionsRef.current = { ...positionsRef.current, [app]: pos }
   }
 
   if (state.phase === 'landing') {
@@ -418,24 +730,17 @@ export default function App() {
     )
   }
 
-  const riceClass = isVieg
-    ? ' rice-viegphunt'
-    : isMochaAlt
-      ? ' rice-viegphunt rice-mocha-alt'
-      : isHaku
-        ? ' rice-hakuspace'
-        : isEnd4
-          ? ' rice-end4'
-          : ''
-
-  const showChrome = !exporting && state.showExportBar !== false
-  const showPeek = !exporting && state.showExportBar === false
+  const showChrome = !exporting && !state.recordMode && state.showExportBar !== false
+  const showPeek = !exporting && !state.recordMode && state.showExportBar === false
+  const termPos = positionsRef.current.terminal ?? defaultPos('terminal', isEnd4)
+  const browserPos = positionsRef.current.browser ?? defaultPos('browser', isEnd4)
+  const filesPos = positionsRef.current.files ?? defaultPos('files', isEnd4)
 
   return (
     <div className="shell">
       <div
         ref={stageRef}
-        className={`stage skin-${state.skin}${riceClass}`}
+        className={`stage skin-${state.skin}${riceClassName}${wsFlash ? ' ws-fade' : ''}`}
         tabIndex={0}
         style={
           {
@@ -444,6 +749,9 @@ export default function App() {
             backgroundImage: `url(${state.wallpaper})`,
           } as CSSProperties
         }
+        onMouseDown={() => {
+          if (!showLauncher && !showKeybinds) setFocusedApp(null)
+        }}
       >
         {isViegLike ? (
           <div className="panel waybar">
@@ -452,17 +760,47 @@ export default function App() {
                 ⭘
               </span>
               <div className="workspaces">
-                <span className="ws active">1</span>
-                <span className="ws">2</span>
-                <span className="ws">3</span>
-                <span className="ws">4</span>
+                {WORKSPACE_IDS.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`ws${workspace === id ? ' active' : ''}`}
+                    onClick={() => goWorkspace(id)}
+                  >
+                    {id}
+                  </button>
+                ))}
               </div>
             </div>
             <div className="panel-right">
-              <span className="wb bt">󰂯</span>
+              <button
+                type="button"
+                className="wb bt"
+                title="Bluetooth (LARP)"
+                onClick={() => {
+                  setBtOn((v) => {
+                    pushToast(v ? 'Bluetooth off' : 'Bluetooth on')
+                    return !v
+                  })
+                }}
+              >
+                {btOn ? '󰂯' : '󰂲'}
+              </button>
               <span className="wb net">  LARP-NET</span>
               <span className="wb bat"> 98%</span>
-              <span className="wb vol">  42%</span>
+              <button
+                type="button"
+                className="wb vol"
+                title="Volume (LARP)"
+                onClick={() => {
+                  setVolMuted((v) => {
+                    pushToast(v ? `Volume ${volLevel}%` : 'Muted')
+                    return !v
+                  })
+                }}
+              >
+                {volMuted ? '󰝟' : ''}  {volMuted ? 'mute' : `${volLevel}%`}
+              </button>
               <span className="wb clock">{clock}</span>
             </div>
           </div>
@@ -470,14 +808,32 @@ export default function App() {
           <>
             <div className="haku-bar" aria-label="Hakuspace top bar">
               <div className="haku-island haku-left">
-                <span className="haku-ico" title="search"></span>
-                <span className="haku-ico" title="settings"></span>
+                <button
+                  type="button"
+                  className="haku-ico"
+                  title="search / launcher"
+                  onClick={() => setShowLauncher(true)}
+                >
+                  
+                </button>
+                <button
+                  type="button"
+                  className="haku-ico"
+                  title="settings"
+                  onClick={() => setState((s) => ({ ...s, phase: 'setup' }))}
+                >
+                  
+                </button>
                 <div className="haku-ws">
-                  <span className="haku-pill" />
-                  <span className="haku-pill active" />
-                  <span className="haku-pill" />
-                  <span className="haku-pill" />
-                  <span className="haku-pill" />
+                  {WORKSPACE_IDS.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={`haku-pill${workspace === id ? ' active' : ''}`}
+                      onClick={() => goWorkspace(id)}
+                      aria-label={`Workspace ${id}`}
+                    />
+                  ))}
                 </div>
               </div>
               <div className="haku-island haku-center">
@@ -493,7 +849,13 @@ export default function App() {
               </div>
             </div>
             <div className="haku-dock" aria-label="Hakuspace dock">
-              <button type="button" className="haku-dock-btn" title="launcher" aria-label="launcher">
+              <button
+                type="button"
+                className="haku-dock-btn"
+                title="launcher"
+                aria-label="launcher"
+                onClick={() => setShowLauncher(true)}
+              >
                 󰕰
               </button>
               <button
@@ -527,14 +889,19 @@ export default function App() {
             <div className="end4-bar" aria-label="end4 floating bar">
               <div className="end4-left">
                 <span className="end4-desk">Desktop</span>
-                <span className="end4-ws-label">Workspace 1</span>
+                <span className="end4-ws-label">Workspace {workspace}</span>
               </div>
               <div className="end4-center">
                 <div className="end4-ws">
-                  <span className="end4-dot active" />
-                  <span className="end4-dot" />
-                  <span className="end4-dot" />
-                  <span className="end4-dot" />
+                  {WORKSPACE_IDS.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={`end4-dot${workspace === id ? ' active' : ''}`}
+                      onClick={() => goWorkspace(id)}
+                      aria-label={`Workspace ${id}`}
+                    />
+                  ))}
                 </div>
               </div>
               <div className="end4-right">
@@ -583,6 +950,18 @@ export default function App() {
               <button type="button" onClick={() => toggleApp('files')}>
                 Files
               </button>
+              <div className="workspaces plain-ws">
+                {WORKSPACE_IDS.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    className={`ws${workspace === id ? ' active' : ''}`}
+                    onClick={() => goWorkspace(id)}
+                  >
+                    {id}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="panel-right">
               <span>
@@ -593,7 +972,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Official rice shots have NO desktop emoji icons */}
         {!isRiceDesktop && (
           <div className="icons">
             <button type="button" onClick={() => toggleApp('terminal')}>
@@ -609,7 +987,7 @@ export default function App() {
           </div>
         )}
 
-        <div className="windows">
+        <div className={`windows${wsFlash ? ' windows-swap' : ''}`}>
           {state.openApps.includes('terminal') && (
             <FakeWindow
               title={
@@ -618,14 +996,17 @@ export default function App() {
                   : `${state.identity.username}@${state.identity.hostname}: ~`
               }
               onClose={() => toggleApp('terminal')}
-              x={isEnd4 ? 320 : 80}
-              y={isEnd4 ? 100 : 90}
+              x={termPos.x}
+              y={termPos.y}
               ghostty={useGhostty}
               kitty={isHaku}
               soft={isEnd4}
+              focused={focusedApp === 'terminal'}
+              onFocus={() => setFocusedApp('terminal')}
+              onMove={(p) => rememberPos('terminal', p)}
             >
-              {useGhostty ? (
-                <div className="ghostty-body">
+              <div className={useGhostty ? 'ghostty-body' : undefined}>
+                {useGhostty && termLines.length <= 1 && (
                   <div className="neo-row">
                     <pre className="arch-ascii">{ARCH_ASCII}</pre>
                     <div className="neoinfo">
@@ -655,42 +1036,48 @@ export default function App() {
                       <p className="neo-disclaimer">you are not installing arch. you are larping.</p>
                     </div>
                   </div>
-                  <div className="omp">
-                    <span className="omp-lead">╭─</span>
-                    <span className="omp-pill omp-user"> {state.identity.username} </span>
-                    <span className="omp-pill omp-dir">   ~ </span>
-                    <span className="omp-pill omp-time"> ♥ {ptime} </span>
-                  </div>
-                  <div className="omp-line2">
-                    <span className="omp-corner">╰─</span>
-                    <span className="omp-bolt">⚡</span>
-                    <span className="omp-cursor"> </span>
-                  </div>
-                </div>
-              ) : (
-                <pre className={`term${isHaku ? ' kitty-term' : ''}`}>
-                  {[
-                    `${state.identity.username}@${state.identity.hostname}`,
-                    '-----------------',
-                    ...neofetchLines.map((r) => `${r.k}: ${r.v}`),
-                    '',
-                    'you are not installing arch.',
-                    'you are larping.',
-                    isHaku ? `\n[${ptime}] ❯ ` : '',
-                  ].join('\n')}
+                )}
+                <pre className={`term shell-out${isHaku ? ' kitty-term' : ''}`}>
+                  {termLines.join('\n')}
                 </pre>
-              )}
+                <div className={useGhostty ? 'omp shell-prompt' : 'shell-prompt'}>
+                  {useGhostty ? (
+                    <>
+                      <div className="omp">
+                        <span className="omp-lead">╭─</span>
+                        <span className="omp-pill omp-user"> {state.identity.username} </span>
+                        <span className="omp-pill omp-dir">   ~ </span>
+                        <span className="omp-pill omp-time"> ♥ {ptime} </span>
+                      </div>
+                      <div className="omp-line2">
+                        <span className="omp-corner">╰─</span>
+                        <span className="omp-bolt">⚡</span>
+                        <span className="shell-typed">{termInput}</span>
+                        <span className={`omp-cursor${focusedApp === 'terminal' ? '' : ' dim'}`}> </span>
+                      </div>
+                    </>
+                  ) : (
+                    <span className={`term${isHaku ? ' kitty-term' : ''}`}>
+                      [{ptime}] ❯ {termInput}
+                      <span className={`omp-cursor${focusedApp === 'terminal' ? '' : ' dim'}`}> </span>
+                    </span>
+                  )}
+                </div>
+              </div>
             </FakeWindow>
           )}
           {state.openApps.includes('browser') && (
             <FakeWindow
               title="Firefox — New Tab"
               onClose={() => toggleApp('browser')}
-              x={isEnd4 ? 560 : 320}
-              y={isEnd4 ? 140 : 120}
+              x={browserPos.x}
+              y={browserPos.y}
               ghostty={useGhostty}
               kitty={isHaku}
               soft={isEnd4}
+              focused={focusedApp === 'browser'}
+              onFocus={() => setFocusedApp('browser')}
+              onMove={(p) => rememberPos('browser', p)}
             >
               <div className="browser">
                 <div className="browser-bar">https://wiki.archlinux.org/</div>
@@ -702,11 +1089,14 @@ export default function App() {
             <FakeWindow
               title="Home"
               onClose={() => toggleApp('files')}
-              x={isEnd4 ? 720 : 520}
-              y={isEnd4 ? 180 : 160}
+              x={filesPos.x}
+              y={filesPos.y}
               ghostty={useGhostty}
               kitty={isHaku}
               soft={isEnd4}
+              focused={focusedApp === 'files'}
+              onFocus={() => setFocusedApp('files')}
+              onMove={(p) => rememberPos('files', p)}
             >
               <div className="files">
                 <div>📁 .config</div>
@@ -752,6 +1142,12 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {showLauncher && (
+          <Launcher riceClass={riceClassName} onLaunch={handleLauncher} onClose={() => setShowLauncher(false)} />
+        )}
+        {showKeybinds && <KeybindOverlay onClose={() => setShowKeybinds(false)} />}
+        <ToastStack toasts={toasts} />
       </div>
 
       {showChrome && (
@@ -768,13 +1164,19 @@ export default function App() {
               </button>
               <button
                 type="button"
-                onClick={() => setState((s) => ({ ...s, wallpaper: cycleInPack(s.wallpaper, wallList, -1) }))}
+                onClick={() => {
+                  setState((s) => ({ ...s, wallpaper: cycleInPack(s.wallpaper, wallList, -1) }))
+                  pushToast('Wallpaper prev')
+                }}
               >
                 Prev wall
               </button>
               <button
                 type="button"
-                onClick={() => setState((s) => ({ ...s, wallpaper: cycleInPack(s.wallpaper, wallList, 1) }))}
+                onClick={() => {
+                  setState((s) => ({ ...s, wallpaper: cycleInPack(s.wallpaper, wallList, 1) }))
+                  pushToast('Wallpaper next')
+                }}
               >
                 Next wall
               </button>
@@ -788,6 +1190,21 @@ export default function App() {
           </button>
           <button onClick={() => exportPng('wide')} disabled={exporting}>
             Export wide
+          </button>
+          <button
+            type="button"
+            className={demoRunning ? 'primary' : undefined}
+            title="~16s scripted LARP demo"
+            onClick={() => (demoRunning ? stopDemo() : startDemo())}
+          >
+            {demoRunning ? 'Stop demo' : 'Demo'}
+          </button>
+          <button
+            type="button"
+            title="Record mode (R)"
+            onClick={() => setState((s) => ({ ...s, recordMode: true, showExportBar: false }))}
+          >
+            Record
           </button>
           <button
             type="button"
@@ -822,6 +1239,9 @@ function FakeWindow({
   ghostty,
   kitty,
   soft,
+  focused,
+  onFocus,
+  onMove,
 }: {
   title: string
   children: import('react').ReactNode
@@ -831,22 +1251,45 @@ function FakeWindow({
   ghostty?: boolean
   kitty?: boolean
   soft?: boolean
+  focused?: boolean
+  onFocus?: () => void
+  onMove?: (pos: { x: number; y: number }) => void
 }) {
   const [pos, setPos] = useState({ x, y })
   const drag = useRef<{ dx: number; dy: number } | null>(null)
-  const cls = ['window', ghostty ? 'ghostty' : '', kitty ? 'kitty' : '', soft ? 'soft-m3' : '']
+  const cls = [
+    'window',
+    ghostty ? 'ghostty' : '',
+    kitty ? 'kitty' : '',
+    soft ? 'soft-m3' : '',
+    focused ? 'focused' : '',
+  ]
     .filter(Boolean)
     .join(' ')
 
+  useEffect(() => {
+    setPos({ x, y })
+  }, [x, y])
+
   return (
-    <div className={cls} style={{ left: pos.x, top: pos.y }}>
+    <div
+      className={cls}
+      style={{ left: pos.x, top: pos.y, zIndex: focused ? 6 : 4 }}
+      onMouseDown={(e) => {
+        e.stopPropagation()
+        onFocus?.()
+      }}
+    >
       <div
         className="titlebar"
         onMouseDown={(e) => {
+          onFocus?.()
           drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y }
           const move = (ev: MouseEvent) => {
             if (!drag.current) return
-            setPos({ x: ev.clientX - drag.current.dx, y: ev.clientY - drag.current.dy })
+            const next = { x: ev.clientX - drag.current.dx, y: ev.clientY - drag.current.dy }
+            setPos(next)
+            onMove?.(next)
           }
           const up = () => {
             drag.current = null

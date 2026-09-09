@@ -608,3 +608,208 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
 .rice-end4 .wall-picker-head { color: #cbc4cb; }
 .rice-end4 .wall-thumb.active,
 .rice-end4 .wall-thumb:hover { border-color: #cbc4cb; }
+
+/* —— Video LARP: workspaces, launcher, keybinds, toasts, shell —— */
+.stage.ws-fade { animation: wsFlash 280ms ease; }
+@keyframes wsFlash {
+  0% { filter: brightness(1); }
+  40% { filter: brightness(1.08); }
+  100% { filter: brightness(1); }
+}
+.windows.windows-swap { animation: wsSwap 220ms ease; }
+@keyframes wsSwap {
+  from { opacity: 0.55; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.plain-ws { display: flex; gap: 0.25rem; margin-left: 0.5rem; }
+.plain-ws .ws {
+  min-width: 1.5rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.8rem;
+}
+.plain-ws .ws.active {
+  border-color: var(--accent, #89b4fa);
+  color: var(--accent, #89b4fa);
+}
+
+.rice-viegphunt .wb.bt,
+.rice-viegphunt .wb.vol {
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  cursor: pointer;
+  font: inherit;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+.rice-viegphunt .wb.bt:hover,
+.rice-viegphunt .wb.vol:hover { background: rgba(255,255,255,0.06); }
+
+.rice-hakuspace .haku-ico {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.rice-hakuspace button.haku-pill {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(232, 220, 200, 0.35);
+  cursor: pointer;
+}
+.rice-hakuspace button.haku-pill.active {
+  width: 18px;
+  background: #E8DCC8;
+}
+
+.rice-end4 button.end4-dot {
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  transition: width 180ms ease, background 180ms ease;
+}
+
+.window.focused {
+  outline: 1px solid color-mix(in srgb, var(--accent, #89b4fa) 55%, transparent);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.55);
+}
+
+.shell-out {
+  max-height: 220px;
+  overflow: auto;
+  margin: 0 0 0.4rem;
+}
+.shell-prompt { margin-top: 0.35rem; }
+.shell-typed { color: #cdd6f4; white-space: pre; }
+.omp-cursor.dim { opacity: 0.25; animation: none; }
+
+.toast-stack {
+  position: absolute;
+  top: 2.6rem;
+  right: 1rem;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  pointer-events: none;
+}
+.toast {
+  background: rgba(17, 17, 27, 0.88);
+  border: 1px solid rgba(205, 214, 244, 0.35);
+  color: #cdd6f4;
+  border-radius: 10px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.82rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  animation: toastIn 180ms ease;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+.rice-hakuspace .toast { border-color: rgba(232, 220, 200, 0.45); color: #E8DCC8; }
+.rice-end4 .toast { border-color: rgba(203, 196, 203, 0.4); color: #e6e1e1; }
+
+.launcher-overlay,
+.keybind-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 18;
+  background: rgba(17, 17, 27, 0.55);
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+.launcher-panel,
+.keybind-panel {
+  width: min(480px, 92vw);
+  background: rgba(30, 30, 46, 0.94);
+  border: 2px solid #cdd6f4;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+  overflow: hidden;
+}
+.launcher-input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid rgba(205, 214, 244, 0.2);
+  background: transparent;
+  color: #cdd6f4;
+  padding: 0.85rem 1rem;
+  outline: none;
+  font: inherit;
+}
+.launcher-list { list-style: none; margin: 0; padding: 0.35rem; max-height: 340px; overflow: auto; }
+.launcher-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: #cdd6f4;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  cursor: pointer;
+}
+.launcher-item.active,
+.launcher-item:hover {
+  background: color-mix(in srgb, var(--accent, #f5c2e7) 22%, transparent);
+}
+.launcher-label { font-weight: 700; }
+.launcher-hint { opacity: 0.55; font-size: 0.8rem; }
+.launcher-empty { padding: 0.85rem; opacity: 0.6; }
+
+.rice-hakuspace .launcher-panel,
+.rice-hakuspace .keybind-panel {
+  border-color: #E8DCC8;
+  background: rgba(20, 18, 16, 0.94);
+}
+.rice-end4 .launcher-panel,
+.rice-end4 .keybind-panel {
+  border-color: #cbc4cb;
+  background: color-mix(in srgb, #201f20 94%, transparent);
+  border-radius: 24px;
+}
+
+.keybind-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.65rem 0.9rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: #cdd6f4;
+}
+.keybind-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0.75rem 0.85rem;
+  display: grid;
+  gap: 0.35rem;
+}
+.keybind-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0.25rem;
+  font-size: 0.85rem;
+  color: #cdd6f4;
+}
+.keybind-list kbd {
+  font: inherit;
+  color: var(--accent, #f5c2e7);
+  white-space: nowrap;
+}
