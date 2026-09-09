@@ -1,4 +1,5 @@
 export type Skin = 'hyprland' | 'gnome' | 'kde'
+export type RiceId = 'default' | 'viegphunt'
 export type ExportPreset = 'story' | 'square' | 'wide'
 export type Phase = 'landing' | 'setup' | 'stage'
 
@@ -14,9 +15,11 @@ export type Identity = {
 export type AppState = {
   phase: Phase
   skin: Skin
+  rice: RiceId
   identity: Identity
   wallpaper: string
   accent: string
+  border: string
   dotsText: string
   dotsNote: string
   openApps: Array<'terminal' | 'browser' | 'files'>

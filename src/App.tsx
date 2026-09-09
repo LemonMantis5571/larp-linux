@@ -2,11 +2,11 @@ import type { CSSProperties } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toPng } from 'html-to-image'
 import { parseDots } from './dots'
+import { RICES, riceById, type RiceId } from './rices'
 import type { AppState, ExportPreset, Identity, Skin } from './types'
 import './App.css'
 
-const DEFAULT_WALL =
-  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80'
+const DEFAULT_WALL = RICES.default.wallpaper
 
 const defaultIdentity: Identity = {
   displayName: 'larper',
@@ -23,29 +23,42 @@ const skinWm: Record<Skin, string> = {
   kde: 'KWin (Plasma)',
 }
 
-function clockNow() {
-  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+function clockNow(vieg: boolean) {
+  if (!vieg) return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const d = new Date()
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mi = String(d.getMinutes()).padStart(2, '0')
+  return `${days[d.getDay()]} ${dd}/${mm}/${yyyy} ~ ${hh}:${mi}`
 }
 
 export default function App() {
   const stageRef = useRef<HTMLDivElement>(null)
-  const [clock, setClock] = useState(clockNow)
   const [exporting, setExporting] = useState(false)
   const [state, setState] = useState<AppState>({
     phase: 'landing',
     skin: 'hyprland',
+    rice: 'default',
     identity: defaultIdentity,
     wallpaper: DEFAULT_WALL,
     accent: '#89b4fa',
+    border: '#89b4fa',
     dotsText: '',
     dotsNote: '',
     openApps: ['terminal'],
   })
+  const [clock, setClock] = useState(() => clockNow(false))
+
+  const isVieg = state.rice === 'viegphunt' && state.skin === 'hyprland'
 
   useEffect(() => {
-    const t = setInterval(() => setClock(clockNow()), 1000)
+    const t = setInterval(() => setClock(clockNow(isVieg)), 1000)
+    setClock(clockNow(isVieg))
     return () => clearInterval(t)
-  }, [])
+  }, [isVieg])
 
   useEffect(() => {
     setState((s) => ({
@@ -66,11 +79,28 @@ export default function App() {
       `CPU: ${i.cpu}`,
       `GPU: ${i.gpu}`,
       `Memory: 64 GiB (fake)`,
+      isVieg ? 'Rice: ViegPhunt (LARP)' : '',
       '',
       'you are not installing arch.',
       'you are larping.',
-    ].join('\n')
-  }, [state.identity])
+    ]
+      .filter(Boolean)
+      .join('\n')
+  }, [state.identity, isVieg])
+
+  function applyRice(id: RiceId) {
+    const pack = riceById(id)
+    setState((s) => ({
+      ...s,
+      rice: id,
+      skin: id === 'viegphunt' ? 'hyprland' : s.skin,
+      accent: pack.accent,
+      border: pack.border,
+      wallpaper: pack.wallpaper,
+      dotsText: pack.dotsSample,
+      dotsNote: pack.credit || s.dotsNote,
+    }))
+  }
 
   function applyDots(text: string) {
     const parsed = parseDots(text)
@@ -131,17 +161,38 @@ export default function App() {
   if (state.phase === 'landing') {
     return (
       <div className="landing">
-        <div className="landing-hero" style={{ backgroundImage: `url(${DEFAULT_WALL})` }}>
+        <div className="landing-hero" style={{ backgroundImage: `url(${RICES.viegphunt.wallpaper})` }}>
           <div className="landing-card">
             <p className="eyebrow">LARP Linux</p>
             <h1>Fake Arch desktops for the timeline.</h1>
             <p>
-              Pick Hyprland, GNOME, or KDE. Paste some dots for vibes. Export a PNG for Instagram or WhatsApp.
+              Pick Hyprland, GNOME, or KDE. One-click ViegPhunt rice (visual only). Export a PNG.
               You are not installing Arch. You are LARPing.
             </p>
-            <button className="primary" onClick={() => setState((s) => ({ ...s, phase: 'setup' }))}>
-              Start LARPing
-            </button>
+            <div className="landing-actions">
+              <button className="primary" onClick={() => setState((s) => ({ ...s, phase: 'setup' }))}>
+                Start LARPing
+              </button>
+              <button
+                className="primary ghost"
+                onClick={() => {
+                  const pack = riceById('viegphunt')
+                  setState((s) => ({
+                    ...s,
+                    phase: 'setup',
+                    rice: 'viegphunt',
+                    skin: 'hyprland',
+                    accent: pack.accent,
+                    border: pack.border,
+                    wallpaper: pack.wallpaper,
+                    dotsText: pack.dotsSample,
+                    dotsNote: pack.credit,
+                  }))
+                }}
+              >
+                LARP ViegPhunt
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -154,7 +205,7 @@ export default function App() {
       <div className="setup">
         <header>
           <h1>Setup your LARP</h1>
-          <p>Visual only. No packages. No real DE.</p>
+          <p>Visual only. No packages. No real DE. Dotfiles are never executed.</p>
         </header>
         <div className="setup-grid">
           <label>
@@ -166,6 +217,13 @@ export default function App() {
               <option value="hyprland">Hyprland</option>
               <option value="gnome">GNOME</option>
               <option value="kde">KDE Plasma</option>
+            </select>
+          </label>
+          <label>
+            Rice pack
+            <select value={state.rice} onChange={(e) => applyRice(e.target.value as RiceId)}>
+              <option value="default">Default</option>
+              <option value="viegphunt">ViegPhunt Arch-Hyprland</option>
             </select>
           </label>
           <label>
@@ -249,38 +307,63 @@ export default function App() {
     <div className="shell">
       <div
         ref={stageRef}
-        className={`stage skin-${state.skin}`}
+        className={`stage skin-${state.skin}${isVieg ? ' rice-viegphunt' : ''}`}
         style={
           {
             '--accent': state.accent,
+            '--border': state.border,
             backgroundImage: `url(${state.wallpaper})`,
           } as CSSProperties
         }
       >
-        <div className="panel">
-          <div className="panel-left">
-            <strong>{state.skin === 'gnome' ? 'Activities' : state.skin === 'kde' ? 'Application Launcher' : 'LARP'}</strong>
-            <button type="button" onClick={() => toggleApp('terminal')}>
-              Terminal
-            </button>
-            <button type="button" onClick={() => toggleApp('browser')}>
-              Browser
-            </button>
-            <button type="button" onClick={() => toggleApp('files')}>
-              Files
-            </button>
+        {isVieg ? (
+          <div className="panel waybar">
+            <div className="panel-left">
+              <span className="wb power" title="wlogout (fake)">
+                ⭘
+              </span>
+              <div className="workspaces">
+                <span className="ws active">1</span>
+                <span className="ws">2</span>
+                <span className="ws">3</span>
+                <span className="ws">4</span>
+              </div>
+            </div>
+            <div className="panel-right">
+              <span className="wb bt">󰂯</span>
+              <span className="wb net"> LARP-NET</span>
+              <span className="wb bat"> 98%</span>
+              <span className="wb vol"> 42%</span>
+              <span className="wb clock">{clock}</span>
+            </div>
           </div>
-          <div className="panel-right">
-            <span>
-              {state.identity.displayName} · {state.identity.username}@{state.identity.hostname}
-            </span>
-            <span>{clock}</span>
+        ) : (
+          <div className="panel">
+            <div className="panel-left">
+              <strong>{state.skin === 'gnome' ? 'Activities' : state.skin === 'kde' ? 'Application Launcher' : 'LARP'}</strong>
+              <button type="button" onClick={() => toggleApp('terminal')}>
+                Terminal
+              </button>
+              <button type="button" onClick={() => toggleApp('browser')}>
+                Browser
+              </button>
+              <button type="button" onClick={() => toggleApp('files')}>
+                Files
+              </button>
+            </div>
+            <div className="panel-right">
+              <span>
+                {state.identity.displayName} · {state.identity.username}@{state.identity.hostname}
+              </span>
+              <span>{clock}</span>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="icons">
           <button type="button" onClick={() => toggleApp('terminal')}>
-            <span>🖥️</span>kitty
+            <span>🖥️</span>
+            {isVieg ? 'ghostty' : 'kitty'}
           </button>
           <button type="button" onClick={() => toggleApp('browser')}>
             <span>🌐</span>firefox
@@ -292,7 +375,12 @@ export default function App() {
 
         <div className="windows">
           {state.openApps.includes('terminal') && (
-            <FakeWindow title={`${state.identity.username}@${state.identity.hostname}: ~`} onClose={() => toggleApp('terminal')} x={80} y={90}>
+            <FakeWindow
+              title={`${state.identity.username}@${state.identity.hostname}: ~`}
+              onClose={() => toggleApp('terminal')}
+              x={80}
+              y={90}
+            >
               <pre className="term">{neofetch}</pre>
             </FakeWindow>
           )}
@@ -352,13 +440,7 @@ function FakeWindow({
   const drag = useRef<{ dx: number; dy: number } | null>(null)
 
   return (
-    <div
-      className="window"
-      style={{ left: pos.x, top: pos.y }}
-      onMouseDown={() => {
-        /* focus styling via last interaction */
-      }}
-    >
+    <div className="window" style={{ left: pos.x, top: pos.y }}>
       <div
         className="titlebar"
         onMouseDown={(e) => {

@@ -159,3 +159,47 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   padding: 0.55rem;
 }
 .skin-kde .export-bar { bottom: 3.2rem; }
+
+.landing-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+.primary.ghost { background: transparent; color: #f5c2e7; border: 1px solid #f5c2e7; }
+
+.rice-viegphunt .panel.waybar {
+  top: 0;
+  background: rgba(30, 30, 46, 0.6);
+  border-bottom: 0;
+  border-radius: 0;
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0.2rem 0.4rem;
+  min-height: 28px;
+}
+.rice-viegphunt .workspaces { display: flex; gap: 2px; align-items: center; }
+.rice-viegphunt .ws {
+  color: #cdd6f4;
+  padding: 0 5px;
+  border-radius: 5px;
+}
+.rice-viegphunt .ws.active {
+  color: #f5c2e7;
+  border: 2px solid #f5c2e7;
+  padding: 0 8px;
+  margin: 0 2px;
+}
+.rice-viegphunt .wb { padding: 0 10px; color: #cdd6f4; }
+.rice-viegphunt .wb.power { margin-left: 10px; padding: 0 10px 0 15px; }
+.rice-viegphunt .wb.bt { color: #f9e2af; }
+.rice-viegphunt .wb.net { color: #a6e3a1; }
+.rice-viegphunt .wb.bat { color: #cba6f7; }
+.rice-viegphunt .wb.vol { color: #fab387; }
+.rice-viegphunt .wb.clock { color: #89b4fa; margin-right: 10px; }
+.rice-viegphunt .window {
+  border-radius: 2px;
+  border-width: 2px;
+  border-color: color-mix(in srgb, var(--border, #cdd6f4) 67%, transparent);
+  background: rgba(30, 30, 46, 0.92);
+}
+.rice-viegphunt .titlebar {
+  background: color-mix(in srgb, var(--accent, #f5c2e7) 18%, #1e1e2e);
+}
+.rice-viegphunt .term { color: #a6e3a1; }
