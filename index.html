@@ -4,6 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LARP Linux</title>
+    <!-- JetBrainsMono Nerd Font (local) so Waybar glyphs render; jsDelivr CSS as text fallback -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.2.5/index.css" />
+    <style>
+      @font-face {
+        font-family: 'JetBrainsMono Nerd Font';
+        src: url('/fonts/JetBrainsMonoNerdFont-Regular.ttf') format('truetype');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'JetBrainsMono Nerd Font';
+        src: url('/fonts/JetBrainsMonoNerdFont-Bold.ttf') format('truetype');
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

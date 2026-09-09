@@ -1,5 +1,5 @@
 export type Skin = 'hyprland' | 'gnome' | 'kde'
-export type RiceId = 'default' | 'viegphunt'
+export type RiceId = 'default' | 'viegphunt' | 'mocha-alt'
 export type ExportPreset = 'story' | 'square' | 'wide'
 export type Phase = 'landing' | 'setup' | 'stage'
 
@@ -23,4 +23,6 @@ export type AppState = {
   dotsText: string
   dotsNote: string
   openApps: Array<'terminal' | 'browser' | 'files'>
+  /** Wallpaper picker overlay (ViegPhunt / packs with walls) */
+  showWallPicker?: boolean
 }

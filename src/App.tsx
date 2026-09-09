@@ -4,6 +4,7 @@ import { toPng } from 'html-to-image'
 import { parseDots } from './dots'
 import { RICES, riceById, type RiceId } from './rices'
 import type { AppState, ExportPreset, Identity, Skin } from './types'
+import { WALLPAPERS, cycleWallpaper } from './wallpapers'
 import './App.css'
 
 const DEFAULT_WALL = RICES.default.wallpaper
@@ -23,8 +24,8 @@ const skinWm: Record<Skin, string> = {
   kde: 'KWin (Plasma)',
 }
 
-function clockNow(vieg: boolean) {
-  if (!vieg) return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+function clockNow(viegStyle: boolean) {
+  if (!viegStyle) return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   const d = new Date()
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const dd = String(d.getDate()).padStart(2, '0')
@@ -34,6 +35,38 @@ function clockNow(vieg: boolean) {
   const mi = String(d.getMinutes()).padStart(2, '0')
   return `${days[d.getDay()]} ${dd}/${mm}/${yyyy} ~ ${hh}:${mi}`
 }
+
+function promptTime() {
+  const d = new Date()
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+function cycleInPack(current: string, walls: string[], dir: 1 | -1): string {
+  if (!walls.length) return cycleWallpaper(current, dir)
+  const idx = walls.indexOf(current)
+  const base = idx < 0 ? 0 : idx
+  return walls[(base + dir + walls.length) % walls.length]
+}
+
+const ARCH_ASCII = `                   -\`
+                  .o+\`
+                 \`ooo/
+                \`+oooo:
+               \`+oooooo:
+               -+oooooo+:
+             \`/:-:++oooo+:
+            \`/++++/+++++++:
+           \`/++++++++++++++:
+          \`/+++ooooooooooooo/\`
+         ./ooosssso++osssssso+\`
+        .oossssso-\`\`\`\`/ossssss+\`
+       -osssssso.      :ssssssso.
+      :osssssss/        osssso+++.
+     /ossssssss/        +ssssooo/-
+   \`/ossssso+/:-        -:/+osssso+-
+  \`+sso+:-\`                 \`.-/+oso:
+ \`++:.                           \`-/+/
+ .\`                                 \/`
 
 export default function App() {
   const stageRef = useRef<HTMLDivElement>(null)
@@ -49,16 +82,25 @@ export default function App() {
     dotsText: '',
     dotsNote: '',
     openApps: ['terminal'],
+    showWallPicker: false,
   })
   const [clock, setClock] = useState(() => clockNow(false))
+  const [ptime, setPtime] = useState(promptTime)
 
   const isVieg = state.rice === 'viegphunt' && state.skin === 'hyprland'
+  const isMochaAlt = state.rice === 'mocha-alt' && state.skin === 'hyprland'
+  const isRiceDesktop = isVieg || isMochaAlt
+  const pack = riceById(state.rice)
+  const wallList = pack.walls.length ? pack.walls : WALLPAPERS.map((w) => w.url)
 
   useEffect(() => {
-    const t = setInterval(() => setClock(clockNow(isVieg)), 1000)
-    setClock(clockNow(isVieg))
+    const t = setInterval(() => {
+      setClock(clockNow(isRiceDesktop))
+      setPtime(promptTime())
+    }, 1000)
+    setClock(clockNow(isRiceDesktop))
     return () => clearInterval(t)
-  }, [isVieg])
+  }, [isRiceDesktop])
 
   useEffect(() => {
     setState((s) => ({
@@ -67,38 +109,58 @@ export default function App() {
     }))
   }, [state.skin])
 
-  const neofetch = useMemo(() => {
+  useEffect(() => {
+    if (state.phase !== 'stage') return
+    const onKey = (e: KeyboardEvent) => {
+      // Super+W (meta+w) toggles wallpaper picker when stage is active
+      if (e.key.toLowerCase() === 'w' && e.metaKey) {
+        e.preventDefault()
+        setState((s) => ({ ...s, showWallPicker: !s.showWallPicker }))
+        return
+      }
+      if (state.showWallPicker && e.key === 'Escape') {
+        setState((s) => ({ ...s, showWallPicker: false }))
+        return
+      }
+      if (isRiceDesktop && e.altKey && e.key === 'ArrowRight') {
+        setState((s) => ({ ...s, wallpaper: cycleInPack(s.wallpaper, wallList, 1) }))
+      }
+      if (isRiceDesktop && e.altKey && e.key === 'ArrowLeft') {
+        setState((s) => ({ ...s, wallpaper: cycleInPack(s.wallpaper, wallList, -1) }))
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [state.phase, state.showWallPicker, isRiceDesktop, wallList])
+
+  const neofetchLines = useMemo(() => {
     const i = state.identity
     return [
-      `${i.username}@${i.hostname}`,
-      '-----------------',
-      `OS: Arch Linux x86_64`,
-      `Host: LARP Linux (not real)`,
-      `Kernel: 6.10.arch-larp`,
-      `WM: ${i.wm}`,
-      `CPU: ${i.cpu}`,
-      `GPU: ${i.gpu}`,
-      `Memory: 64 GiB (fake)`,
-      isVieg ? 'Rice: ViegPhunt (LARP)' : '',
-      '',
-      'you are not installing arch.',
-      'you are larping.',
+      { k: 'OS', v: 'Arch Linux x86_64' },
+      { k: 'Host', v: 'LARP Linux (not real)' },
+      { k: 'Kernel', v: '6.10.arch-larp' },
+      { k: 'WM', v: i.wm },
+      { k: 'CPU', v: i.cpu },
+      { k: 'GPU', v: i.gpu },
+      { k: 'Memory', v: '64 GiB (fake)' },
+      { k: 'Terminal', v: 'ghostty' },
+      ...(isVieg ? [{ k: 'Rice', v: 'ViegPhunt (LARP)' }] : []),
+      ...(isMochaAlt ? [{ k: 'Rice', v: 'Mocha Alt (LARP pack)' }] : []),
     ]
-      .filter(Boolean)
-      .join('\n')
-  }, [state.identity, isVieg])
+  }, [state.identity, isVieg, isMochaAlt])
 
   function applyRice(id: RiceId) {
-    const pack = riceById(id)
+    const next = riceById(id)
     setState((s) => ({
       ...s,
       rice: id,
-      skin: id === 'viegphunt' ? 'hyprland' : s.skin,
-      accent: pack.accent,
-      border: pack.border,
-      wallpaper: pack.wallpaper,
-      dotsText: pack.dotsSample,
-      dotsNote: pack.credit || s.dotsNote,
+      skin: id === 'viegphunt' || id === 'mocha-alt' ? 'hyprland' : s.skin,
+      accent: next.accent,
+      border: next.border,
+      wallpaper: next.wallpaper,
+      dotsText: next.dotsSample,
+      dotsNote: next.credit || s.dotsNote,
+      showWallPicker: false,
     }))
   }
 
@@ -158,6 +220,10 @@ export default function App() {
     }))
   }
 
+  function setWall(url: string) {
+    setState((s) => ({ ...s, wallpaper: url, showWallPicker: false }))
+  }
+
   if (state.phase === 'landing') {
     return (
       <div className="landing">
@@ -176,17 +242,17 @@ export default function App() {
               <button
                 className="primary ghost"
                 onClick={() => {
-                  const pack = riceById('viegphunt')
+                  const next = riceById('viegphunt')
                   setState((s) => ({
                     ...s,
                     phase: 'setup',
                     rice: 'viegphunt',
                     skin: 'hyprland',
-                    accent: pack.accent,
-                    border: pack.border,
-                    wallpaper: pack.wallpaper,
-                    dotsText: pack.dotsSample,
-                    dotsNote: pack.credit,
+                    accent: next.accent,
+                    border: next.border,
+                    wallpaper: next.wallpaper,
+                    dotsText: next.dotsSample,
+                    dotsNote: next.credit,
                   }))
                 }}
               >
@@ -224,6 +290,7 @@ export default function App() {
             <select value={state.rice} onChange={(e) => applyRice(e.target.value as RiceId)}>
               <option value="default">Default</option>
               <option value="viegphunt">ViegPhunt Arch-Hyprland</option>
+              <option value="mocha-alt">Mocha Alt (LARP pack)</option>
             </select>
           </label>
           <label>
@@ -303,11 +370,14 @@ export default function App() {
     )
   }
 
+  const riceClass = isVieg ? ' rice-viegphunt' : isMochaAlt ? ' rice-viegphunt rice-mocha-alt' : ''
+
   return (
     <div className="shell">
       <div
         ref={stageRef}
-        className={`stage skin-${state.skin}${isVieg ? ' rice-viegphunt' : ''}`}
+        className={`stage skin-${state.skin}${riceClass}`}
+        tabIndex={0}
         style={
           {
             '--accent': state.accent,
@@ -316,7 +386,7 @@ export default function App() {
           } as CSSProperties
         }
       >
-        {isVieg ? (
+        {isRiceDesktop ? (
           <div className="panel waybar">
             <div className="panel-left">
               <span className="wb power" title="wlogout (fake)">
@@ -331,9 +401,9 @@ export default function App() {
             </div>
             <div className="panel-right">
               <span className="wb bt">󰂯</span>
-              <span className="wb net"> LARP-NET</span>
+              <span className="wb net">  LARP-NET</span>
               <span className="wb bat"> 98%</span>
-              <span className="wb vol"> 42%</span>
+              <span className="wb vol">  42%</span>
               <span className="wb clock">{clock}</span>
             </div>
           </div>
@@ -360,18 +430,21 @@ export default function App() {
           </div>
         )}
 
-        <div className="icons">
-          <button type="button" onClick={() => toggleApp('terminal')}>
-            <span>🖥️</span>
-            {isVieg ? 'ghostty' : 'kitty'}
-          </button>
-          <button type="button" onClick={() => toggleApp('browser')}>
-            <span>🌐</span>firefox
-          </button>
-          <button type="button" onClick={() => toggleApp('files')}>
-            <span>📁</span>thunar
-          </button>
-        </div>
+        {/* Official ViegPhunt shots have NO desktop icons */}
+        {!isRiceDesktop && (
+          <div className="icons">
+            <button type="button" onClick={() => toggleApp('terminal')}>
+              <span>🖥️</span>
+              kitty
+            </button>
+            <button type="button" onClick={() => toggleApp('browser')}>
+              <span>🌐</span>firefox
+            </button>
+            <button type="button" onClick={() => toggleApp('files')}>
+              <span>📁</span>thunar
+            </button>
+          </div>
+        )}
 
         <div className="windows">
           {state.openApps.includes('terminal') && (
@@ -380,12 +453,67 @@ export default function App() {
               onClose={() => toggleApp('terminal')}
               x={80}
               y={90}
+              ghostty={isRiceDesktop}
             >
-              <pre className="term">{neofetch}</pre>
+              {isRiceDesktop ? (
+                <div className="ghostty-body">
+                  <div className="neo-row">
+                    <pre className="arch-ascii">{ARCH_ASCII}</pre>
+                    <div className="neoinfo">
+                      <div className="neo-title">
+                        <span className="neo-user">{state.identity.username}</span>
+                        <span className="neo-at">@</span>
+                        <span className="neo-host">{state.identity.hostname}</span>
+                      </div>
+                      <div className="neo-rule">-----------------</div>
+                      {neofetchLines.map((row) => (
+                        <div key={row.k} className="neo-line">
+                          <span className="neo-k">{row.k}</span>
+                          <span className="neo-colon">: </span>
+                          <span className="neo-v">{row.v}</span>
+                        </div>
+                      ))}
+                      <div className="neo-swatches" aria-hidden>
+                        <i style={{ background: '#45475a' }} />
+                        <i style={{ background: '#f38ba8' }} />
+                        <i style={{ background: '#a6e3a1' }} />
+                        <i style={{ background: '#f9e2af' }} />
+                        <i style={{ background: '#89b4fa' }} />
+                        <i style={{ background: '#cba6f7' }} />
+                        <i style={{ background: '#94e2d5' }} />
+                        <i style={{ background: '#cdd6f4' }} />
+                      </div>
+                      <p className="neo-disclaimer">you are not installing arch. you are larping.</p>
+                    </div>
+                  </div>
+                  <div className="omp">
+                    <span className="omp-lead">╭─</span>
+                    <span className="omp-pill omp-user"> {state.identity.username} </span>
+                    <span className="omp-pill omp-dir">   ~ </span>
+                    <span className="omp-pill omp-time"> ♥ {ptime} </span>
+                  </div>
+                  <div className="omp-line2">
+                    <span className="omp-corner">╰─</span>
+                    <span className="omp-bolt">⚡</span>
+                    <span className="omp-cursor"> </span>
+                  </div>
+                </div>
+              ) : (
+                <pre className="term">
+                  {[
+                    `${state.identity.username}@${state.identity.hostname}`,
+                    '-----------------',
+                    ...neofetchLines.map((r) => `${r.k}: ${r.v}`),
+                    '',
+                    'you are not installing arch.',
+                    'you are larping.',
+                  ].join('\n')}
+                </pre>
+              )}
             </FakeWindow>
           )}
           {state.openApps.includes('browser') && (
-            <FakeWindow title="Firefox — New Tab" onClose={() => toggleApp('browser')} x={320} y={120}>
+            <FakeWindow title="Firefox — New Tab" onClose={() => toggleApp('browser')} x={320} y={120} ghostty={isRiceDesktop}>
               <div className="browser">
                 <div className="browser-bar">https://wiki.archlinux.org/</div>
                 <div className="browser-body">Empty LARP browser. Looks busy. Does nothing.</div>
@@ -393,7 +521,7 @@ export default function App() {
             </FakeWindow>
           )}
           {state.openApps.includes('files') && (
-            <FakeWindow title="Home" onClose={() => toggleApp('files')} x={520} y={160}>
+            <FakeWindow title="Home" onClose={() => toggleApp('files')} x={520} y={160} ghostty={isRiceDesktop}>
               <div className="files">
                 <div>📁 .config</div>
                 <div>📁 .local</div>
@@ -403,11 +531,69 @@ export default function App() {
             </FakeWindow>
           )}
         </div>
+
+        {state.showWallPicker && (
+          <div
+            className="wall-picker"
+            role="dialog"
+            aria-label="Wallpaper picker"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setState((s) => ({ ...s, showWallPicker: false }))
+            }}
+          >
+            <div className="wall-picker-panel">
+              <div className="wall-picker-head">
+                <span>  Walls</span>
+                <span className="wall-hint">Super+W · Esc</span>
+              </div>
+              <div className="wall-grid">
+                {wallList.map((url) => {
+                  const name = url.split('/').pop() || url
+                  return (
+                    <button
+                      key={url}
+                      type="button"
+                      className={`wall-thumb${state.wallpaper === url ? ' active' : ''}`}
+                      onClick={() => setWall(url)}
+                      title={name}
+                    >
+                      <img src={url} alt={name} loading="lazy" />
+                      <span>{name.replace(/\.(png|jpe?g|webp)$/i, '')}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {!exporting && (
         <div className="export-bar">
           <button onClick={() => setState((s) => ({ ...s, phase: 'setup' }))}>Setup</button>
+          {isRiceDesktop && (
+            <>
+              <button
+                type="button"
+                title="Super+W"
+                onClick={() => setState((s) => ({ ...s, showWallPicker: !s.showWallPicker }))}
+              >
+                Walls
+              </button>
+              <button
+                type="button"
+                onClick={() => setState((s) => ({ ...s, wallpaper: cycleInPack(s.wallpaper, wallList, -1) }))}
+              >
+                Prev wall
+              </button>
+              <button
+                type="button"
+                onClick={() => setState((s) => ({ ...s, wallpaper: cycleInPack(s.wallpaper, wallList, 1) }))}
+              >
+                Next wall
+              </button>
+            </>
+          )}
           <button className="primary" onClick={() => exportPng('story')} disabled={exporting}>
             Export story
           </button>
@@ -429,18 +615,20 @@ function FakeWindow({
   onClose,
   x,
   y,
+  ghostty,
 }: {
   title: string
   children: import('react').ReactNode
   onClose: () => void
   x: number
   y: number
+  ghostty?: boolean
 }) {
   const [pos, setPos] = useState({ x, y })
   const drag = useRef<{ dx: number; dy: number } | null>(null)
 
   return (
-    <div className="window" style={{ left: pos.x, top: pos.y }}>
+    <div className={`window${ghostty ? ' ghostty' : ''}`} style={{ left: pos.x, top: pos.y }}>
       <div
         className="titlebar"
         onMouseDown={(e) => {
