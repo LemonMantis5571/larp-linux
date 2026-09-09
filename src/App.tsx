@@ -5,6 +5,7 @@ import { parseDots } from './dots'
 import { HYPR_RICE_IDS, RICES, riceById, type RiceId } from './rices'
 import type { AppId, AppState, ExportPreset, Identity, Skin, Toast, WorkspaceId } from './types'
 import { WALLPAPERS, cycleWallpaper } from './wallpapers'
+import { cssBgUrl, hotlinkLikelyBlocked, normalizeWallUrl, probeImage } from './wallUrl'
 import { defaultPos, initialWorkspaces, switchWorkspace, WORKSPACE_IDS } from './workspaces'
 import { isSuper, isTypingTarget } from './keybinds'
 import { runFakeCommand, type ShellContext } from './fakeShell'
@@ -268,10 +269,29 @@ export default function App() {
   }, [])
 
   const setWall = useCallback(
-    (url: string) => {
-      setState((s) => ({ ...s, wallpaper: url, showWallPicker: false }))
-      const name = url.split('/').pop() || 'wallpaper'
-      pushToast(`Wallpaper · ${name.replace(/\.(png|jpe?g|webp)$/i, '').slice(0, 28)}`)
+    async (url: string) => {
+      const normalized = normalizeWallUrl(url)
+      if (hotlinkLikelyBlocked(normalized)) {
+        // uhdpaper checks Referer; browsers on localhost get HTML, not the JPEG.
+        const localLisa = '/walls/lisa-blackpink-4k.jpg'
+        if (/lisa-blackpink/i.test(normalized)) {
+          setState((s) => ({ ...s, wallpaper: localLisa, showWallPicker: false }))
+          pushToast('uhdpaper blocks hotlinks — using bundled Lisa wall')
+          return
+        }
+        pushToast('This host blocks hotlinks — use Upload wallpaper')
+        setState((s) => ({ ...s, showWallPicker: false }))
+        return
+      }
+      const ok = await probeImage(normalized)
+      if (!ok) {
+        pushToast('Wallpaper URL failed to load — try Upload')
+        setState((s) => ({ ...s, showWallPicker: false }))
+        return
+      }
+      setState((s) => ({ ...s, wallpaper: normalized, showWallPicker: false }))
+      const name = normalized.split('/').pop() || 'wallpaper'
+      pushToast(`Wallpaper · ${name.replace(/\.(png|jpe?g|webp)$/i, '')}`)
     },
     [pushToast],
   )
@@ -595,7 +615,7 @@ export default function App() {
   if (state.phase === 'landing') {
     return (
       <div className="landing">
-        <div className="landing-hero" style={{ backgroundImage: `url(${RICES.viegphunt.wallpaper})` }}>
+        <div className="landing-hero" style={{ backgroundImage: cssBgUrl(RICES.viegphunt.wallpaper) }}>
           <div className="landing-card">
             <p className="eyebrow">LARP Linux</p>
             <h1>Fake Arch desktops for the timeline.</h1>
@@ -690,7 +710,15 @@ export default function App() {
           </label>
           <label>
             Wallpaper URL
-            <input value={state.wallpaper} onChange={(e) => setState((s) => ({ ...s, wallpaper: e.target.value }))} />
+            <input
+              value={state.wallpaper}
+              onChange={(e) => setState((s) => ({ ...s, wallpaper: e.target.value }))}
+              onBlur={(e) => {
+                const v = e.target.value.trim()
+                if (!v) return
+                void setWall(v)
+              }}
+            />
           </label>
           <label>
             Or upload wallpaper
@@ -746,7 +774,7 @@ export default function App() {
           {
             '--accent': state.accent,
             '--border': state.border,
-            backgroundImage: `url(${state.wallpaper})`,
+            backgroundImage: cssBgUrl(state.wallpaper),
           } as CSSProperties
         }
         onMouseDown={() => {

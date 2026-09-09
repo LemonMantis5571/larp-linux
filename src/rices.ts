@@ -60,7 +60,7 @@ export const RICES: Record<RiceId, RicePack> = {
     credit: 'LARP of github.com/ViegPhunt/Dotfiles — visual only, not installed',
     accent: '#f5c2e7',
     wallpaper: wallpaperUrl('misty-seascape.jpg'),
-    walls: viegWallUrls,
+    walls: [...viegWallUrls, '/walls/lisa-blackpink-4k.jpg'],
     border: '#cdd6f4',
     dotsSample: `/* ViegPhunt / Catppuccin Mocha — paste-only LARP sample */
 @define-color background #1e1e2e;
