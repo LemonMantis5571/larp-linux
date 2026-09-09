@@ -789,9 +789,17 @@ export default function App() {
         {isViegLike ? (
           <div className="panel waybar">
             <div className="panel-left">
-              <span className="wb power" title="wlogout (fake)">
+              <button
+                type="button"
+                className="wb power"
+                title="Launcher (Ctrl+Space)"
+                onClick={() => {
+                  setShowKeybinds(false)
+                  setShowLauncher(true)
+                }}
+              >
                 ⭘
-              </span>
+              </button>
               <button
                 type="button"
                 className="wb launch"
@@ -801,18 +809,18 @@ export default function App() {
                   setShowLauncher(true)
                 }}
               >
-                󰘔
+                apps
               </button>
               <button
                 type="button"
                 className="wb term"
-                title="Terminal"
+                title="Open terminal"
                 onClick={() => {
                   openApp('terminal')
                   setFocusedApp('terminal')
                 }}
               >
-                
+                term
               </button>
               <div className="workspaces">
                 {WORKSPACE_IDS.map((id) => (
@@ -1208,6 +1216,26 @@ export default function App() {
       {showChrome && (
         <div className="export-bar">
           <button onClick={() => setState((s) => ({ ...s, phase: 'setup' }))}>Setup</button>
+          <button
+            type="button"
+            title="Open terminal"
+            onClick={() => {
+              openApp('terminal')
+              setFocusedApp('terminal')
+            }}
+          >
+            Terminal
+          </button>
+          <button
+            type="button"
+            title="Ctrl+Space"
+            onClick={() => {
+              setShowKeybinds(false)
+              setShowLauncher(true)
+            }}
+          >
+            Apps
+          </button>
           {hasWallPicker && (
             <>
               <button

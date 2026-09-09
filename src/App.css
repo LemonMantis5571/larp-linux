@@ -830,3 +830,15 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
 .rice-viegphunt button.wb.term:hover {
   color: #f5c2e7;
 }
+
+.rice-viegphunt button.wb.power {
+  color: #cdd6f4;
+  cursor: pointer;
+}
+.rice-viegphunt button.wb.launch,
+.rice-viegphunt button.wb.term {
+  color: #89b4fa;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  padding: 0 8px;
+}
