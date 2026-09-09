@@ -16,9 +16,13 @@ export const KEYBINDS: KeybindEntry[] = [
   { keys: 'Alt+← / →', action: 'Cycle wallpaper in pack' },
   { keys: 'Ctrl+/  or  ?', action: 'Keybind overlay' },
   { keys: 'H', action: 'Toggle export bar (not in record mode)' },
+  { keys: 'E', action: 'Export PNG, last preset. Works with the bar hidden' },
   { keys: 'R', action: 'Toggle record mode' },
   { keys: 'Esc', action: 'Close overlay / exit record mode' },
-  { keys: 'Click 󰘔 / term on bar', action: 'Launcher / Terminal (Vieg)' },
+  { keys: 'M', action: 'Play / pause fake MPRIS' },
+  { keys: 'L', action: 'Toggle lyrics overlay' },
+  { keys: 'Click cava / play', action: 'Play or pause fake MPRIS' },
+  { keys: 'Click mpris / media', action: 'Open lyrics overlay' },
   { keys: 'Type in terminal', action: 'Fake shell (clear, neofetch, ls…)' },
 ]
 

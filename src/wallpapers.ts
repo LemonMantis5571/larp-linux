@@ -33,10 +33,10 @@ export function wallpaperUrl(file: WallpaperFile | string): string {
 export const viegLocal = VIEG_COLLECTION_FILES.map((f) => wallpaperUrl(f))
 export const viegRaw = viegLocal
 
-/** end4-pC ships only this real wallpaper asset. */
-export const END4_WALLS = ['/walls/end4/default_wallpaper.png', '/end4-default_wallpaper.png']
+/** Bundled from pctrade/end4-pC assets/images/default_wallpaper.png */
+export const END4_WALLS = ['/walls/end4/default_wallpaper.png']
 
-export const EXTRA_LOCAL = ['/walls/lisa-blackpink-4k.jpg']
+export const EXTRA_LOCAL: string[] = []
 
 /** All real walls (Hakuspace ships none in-repo). */
 export const ALL_DOTFILE_WALLS: string[] = [...viegLocal, ...END4_WALLS, ...EXTRA_LOCAL]

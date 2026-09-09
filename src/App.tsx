@@ -12,7 +12,16 @@ import { runFakeCommand, type ShellContext } from './fakeShell'
 import { Launcher, type LauncherAction } from './Launcher'
 import { KeybindOverlay } from './KeybindOverlay'
 import { ToastStack } from './ToastStack'
+import { LyricsPanel } from './LyricsPanel'
+import { CAVA_BARS, LARP_TRACKS, nextCavaLevels } from './music'
+import { ViegWaybar } from './ViegWaybar'
+import { HakuChrome } from './HakuChrome'
+import { End4Chrome } from './End4Chrome'
 import './App.css'
+import './vendor/vieg-waybar.css'
+import './vendor/haku-island.css'
+import './vendor/icons.css'
+import './vendor/end4-media.css'
 
 const DEFAULT_WALL = RICES.default.wallpaper
 
@@ -99,6 +108,7 @@ export default function App() {
   const stageRef = useRef<HTMLDivElement>(null)
   const positionsRef = useRef<Partial<Record<AppId, { x: number; y: number }>>>({})
   const demoTimers = useRef<number[]>([])
+  const lastPresetRef = useRef<ExportPreset>('story')
   const [exporting, setExporting] = useState(false)
   const [state, setState] = useState<AppState>({
     phase: 'landing',
@@ -133,9 +143,15 @@ export default function App() {
   const [wifiOn, setWifiOn] = useState(true)
   const [brightness, setBrightness] = useState(40)
   const [musicPlaying, setMusicPlaying] = useState(false)
+  const [trackIndex, setTrackIndex] = useState(0)
+  const [lyricLine, setLyricLine] = useState(0)
+  const [showLyrics, setShowLyrics] = useState(false)
+  const [cavaLevels, setCavaLevels] = useState(() => Array.from({ length: CAVA_BARS }, () => 0.18))
+  const [hakuMonitorOpen, setHakuMonitorOpen] = useState(false)
   const [weatherTemp, setWeatherTemp] = useState(22)
   const [demoRunning, setDemoRunning] = useState(false)
   const [wsFlash, setWsFlash] = useState(false)
+  const track = LARP_TRACKS[trackIndex] ?? LARP_TRACKS[0]
 
   const isVieg = state.rice === 'viegphunt' && state.skin === 'hyprland'
   const isMochaAlt = state.rice === 'mocha-alt' && state.skin === 'hyprland'
@@ -307,6 +323,40 @@ export default function App() {
     })
   }, [pushToast])
 
+  const skipTrack = useCallback(
+    (dir: 1 | -1) => {
+      setTrackIndex((i) => {
+        const next = (i + dir + LARP_TRACKS.length) % LARP_TRACKS.length
+        pushToast(`${dir > 0 ? 'next' : 'prev'} · ${LARP_TRACKS[next].title}`)
+        return next
+      })
+      setLyricLine(0)
+    },
+    [pushToast],
+  )
+
+  const toggleMusic = useCallback(() => {
+    setMusicPlaying((v) => {
+      pushToast(v ? `paused · ${track.title}` : `playing · ${track.title}`)
+      return !v
+    })
+  }, [pushToast, track.title])
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setCavaLevels((prev) => nextCavaLevels(prev, musicPlaying))
+    }, musicPlaying ? 90 : 240)
+    return () => window.clearInterval(id)
+  }, [musicPlaying])
+
+  useEffect(() => {
+    if (!musicPlaying) return
+    const id = window.setInterval(() => {
+      setLyricLine((n) => (n + 1) % track.lyrics.length)
+    }, 2800)
+    return () => window.clearInterval(id)
+  }, [musicPlaying, track.lyrics.length])
+
   const openApp = useCallback((app: AppId) => {
     setState((s) => ({
       ...s,
@@ -405,7 +455,13 @@ export default function App() {
       runShellLine('neofetch')
     })
     at(9000, () => goWorkspace(2))
+    at(5000, () => {
+      setMusicPlaying(true)
+      pushToast(`playing · ${LARP_TRACKS[0].title}`)
+    })
+    at(7200, () => setShowLyrics(true))
     at(11500, () => {
+      setShowLyrics(false)
       setState((s) => {
         const next = cycleInPack(s.wallpaper, wallList, 1)
         const name = next.split('/').pop() || 'wallpaper'
@@ -423,7 +479,7 @@ export default function App() {
     if (state.phase !== 'stage') return
     const onKey = (e: KeyboardEvent) => {
       const typing = isTypingTarget(e.target)
-      const overlayOpen = showLauncher || showKeybinds || !!state.showWallPicker
+      const overlayOpen = showLauncher || showKeybinds || showLyrics || !!state.showWallPicker
 
       // Record mode toggle / exit
       if (!typing && (e.key === 'r' || e.key === 'R') && !e.metaKey && !e.ctrlKey && !e.altKey) {
@@ -438,6 +494,12 @@ export default function App() {
       if (state.recordMode && e.key === 'Escape' && !overlayOpen) {
         e.preventDefault()
         setState((s) => ({ ...s, recordMode: false }))
+        return
+      }
+
+      if (showLyrics && e.key === 'Escape') {
+        e.preventDefault()
+        setShowLyrics(false)
         return
       }
 
@@ -487,6 +549,25 @@ export default function App() {
       ) {
         e.preventDefault()
         setState((s) => ({ ...s, showExportBar: !s.showExportBar }))
+        return
+      }
+
+      // Export E. Without this you cannot shoot with the bar hidden, which is
+      // the whole point of hiding it.
+      if (!typing && (e.key === 'e' || e.key === 'E') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault()
+        void exportPng(lastPresetRef.current)
+        return
+      }
+
+      if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key === 'm' || e.key === 'M')) {
+        e.preventDefault()
+        toggleMusic()
+        return
+      }
+      if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key === 'l' || e.key === 'L')) {
+        e.preventDefault()
+        setShowLyrics((v) => !v)
         return
       }
 
@@ -559,6 +640,8 @@ export default function App() {
     wallList,
     showLauncher,
     showKeybinds,
+    showLyrics,
+    toggleMusic,
     focusedApp,
     termInput,
     goWorkspace,
@@ -636,15 +719,21 @@ export default function App() {
   async function exportPng(preset: ExportPreset) {
     const node = stageRef.current
     if (!node) return
+    lastPresetRef.current = preset
     setExporting(true)
     try {
       const size =
         preset === 'story' ? { w: 1080, h: 1920 } : preset === 'square' ? { w: 1080, h: 1080 } : { w: 1920, h: 1080 }
+      // let React paint with the chrome unmounted before we snapshot
+      await new Promise<void>((res) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => res()))
+      })
       const dataUrl = await toPng(node, {
         cacheBust: true,
         pixelRatio: 2,
         width: node.clientWidth,
         height: node.clientHeight,
+        filter: (n) => !(n instanceof HTMLElement && n.dataset.larpChrome !== undefined),
       })
       const img = new Image()
       await new Promise<void>((res, rej) => {
@@ -709,10 +798,30 @@ export default function App() {
   if (state.phase === 'setup') {
     const i = state.identity
     return (
+      <div
+        className={`setup-shell${riceClassName}`}
+        style={
+          {
+            '--accent': state.accent,
+            backgroundImage: cssBgUrl(state.wallpaper),
+          } as CSSProperties
+        }
+      >
       <div className="setup">
+        <div className="setup-titlebar">
+          <span className="setup-dots" aria-hidden>
+            <i />
+            <i />
+            <i />
+          </span>
+          <span className="setup-title">
+            {i.username}@{i.hostname}: ~/.config/larp
+          </span>
+          <span className="setup-tag">visual only</span>
+        </div>
         <header>
           <h1>Setup your LARP</h1>
-          <p>Visual only. No packages. No real DE. Dotfiles are never executed.</p>
+          <p>No packages. No real DE. Dotfiles are never executed.</p>
         </header>
         <div className="setup-grid">
           <label>
@@ -798,7 +907,14 @@ export default function App() {
           </label>
           <label>
             Accent
-            <input type="color" value={state.accent} onChange={(e) => setState((s) => ({ ...s, accent: e.target.value }))} />
+            <span className="accent-row">
+              <input
+                type="color"
+                value={state.accent}
+                onChange={(e) => setState((s) => ({ ...s, accent: e.target.value }))}
+              />
+              <code>{state.accent}</code>
+            </span>
           </label>
           <label className="wide">
             Dotfiles (best-effort)
@@ -817,6 +933,7 @@ export default function App() {
             Enter desktop
           </button>
         </div>
+      </div>
       </div>
     )
   }
@@ -845,316 +962,79 @@ export default function App() {
         }}
       >
         {isViegLike ? (
-          <div className="panel waybar">
-            <div className="panel-left">
-              <button
-                type="button"
-                className="wb power"
-                title="Launcher (Ctrl+Space)"
-                onClick={() => {
-                  setShowKeybinds(false)
-                  setShowLauncher(true)
-                }}
-              >
-                ⭘
-              </button>
-              <button
-                type="button"
-                className="wb launch"
-                title="Launcher (Ctrl+Space)"
-                onClick={() => {
-                  setShowKeybinds(false)
-                  setShowLauncher(true)
-                }}
-              >
-                apps
-              </button>
-              <button
-                type="button"
-                className="wb term"
-                title="Open terminal"
-                onClick={() => {
-                  openApp('terminal')
-                  setFocusedApp('terminal')
-                }}
-              >
-                term
-              </button>
-              <div className="workspaces">
-                {WORKSPACE_IDS.map((id) => (
-                  <button
-                    key={id}
-                    type="button"
-                    className={`ws${workspace === id ? ' active' : ''}`}
-                    onClick={() => goWorkspace(id)}
-                  >
-                    {id}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="panel-right">
-              <button
-                type="button"
-                className="wb bt"
-                title="Bluetooth (LARP)"
-                onClick={toggleBt}
-              >
-                {btOn ? '󰂯' : '󰂲'}
-              </button>
-              <button
-                type="button"
-                className="wb net"
-                title="Wi-Fi (LARP)"
-                onClick={toggleWifi}
-              >
-                {wifiOn ? '  LARP-NET' : '  off'}
-              </button>
-              <button
-                type="button"
-                className="wb bat"
-                title="Battery (LARP)"
-                onClick={toastBattery}
-              >
-                 98%
-              </button>
-              <button
-                type="button"
-                className="wb vol"
-                title="Volume (LARP)"
-                onClick={toggleVol}
-              >
-                {volMuted ? '󰝟' : ''}  {volMuted ? 'mute' : `${volLevel}%`}
-              </button>
-              <button
-                type="button"
-                className="wb clock"
-                title="Clock / keybinds"
-                onClick={openClock}
-              >
-                {clock}
-              </button>
-            </div>
-          </div>
+          <ViegWaybar
+            workspace={workspace}
+            goWorkspace={goWorkspace}
+            clock={clock}
+            btOn={btOn}
+            wifiOn={wifiOn}
+            volMuted={volMuted}
+            volLevel={volLevel}
+            onPower={() => {
+              pushToast('wlogout · still larping')
+              setShowKeybinds(false)
+              setShowLauncher(true)
+            }}
+            onToggleBt={toggleBt}
+            onToggleWifi={toggleWifi}
+            onBattery={toastBattery}
+            onToggleVol={toggleVol}
+            onClock={openClock}
+          />
         ) : isHaku ? (
-          <>
-            <div className="haku-bar" aria-label="Hakuspace top bar">
-              <div className="haku-island haku-left">
-                <button
-                  type="button"
-                  className="haku-ico"
-                  title="search / launcher"
-                  onClick={() => setShowLauncher(true)}
-                >
-                  
-                </button>
-                <button
-                  type="button"
-                  className="haku-ico"
-                  title="settings"
-                  onClick={() => setState((s) => ({ ...s, phase: 'setup' }))}
-                >
-                  
-                </button>
-                <div className="haku-ws">
-                  {WORKSPACE_IDS.map((id) => (
-                    <button
-                      key={id}
-                      type="button"
-                      className={`haku-pill${workspace === id ? ' active' : ''}`}
-                      onClick={() => goWorkspace(id)}
-                      aria-label={`Workspace ${id}`}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="haku-island haku-center">
-                <button
-                  type="button"
-                  className="haku-clock"
-                  title="Clock / keybinds"
-                  onClick={openClock}
-                >
-                  {clock}
-                </button>
-              </div>
-              <div className="haku-island haku-right">
-                <button type="button" className="haku-mod" title="Battery (LARP)" onClick={toastBattery}>
-                   79%
-                </button>
-                <button type="button" className="haku-mod" title="Volume (LARP)" onClick={toggleVol}>
-                  {volMuted ? '󰝟' : ''} {volMuted ? 'mute' : `${volLevel}%`}
-                </button>
-                <button type="button" className="haku-mod" title="Brightness (LARP)" onClick={cycleBrightness}>
-                  󰃠 {brightness}%
-                </button>
-                <button type="button" className="haku-mod" title="Wi-Fi (LARP)" onClick={toggleWifi}>
-                  {wifiOn ? '' : '󰖪'}
-                </button>
-                <button type="button" className="haku-mod" title="Bluetooth (LARP)" onClick={toggleBt}>
-                  {btOn ? '󰂯' : '󰂲'}
-                </button>
-                <button
-                  type="button"
-                  className="haku-mod"
-                  title="Power (LARP)"
-                  onClick={() => {
-                    pushToast('wlogout · still larping')
-                    setShowKeybinds(false)
-                    setShowLauncher(true)
-                  }}
-                >
-                  ⏻
-                </button>
-              </div>
-            </div>
-            <div className="haku-dock" aria-label="Hakuspace dock">
-              <button
-                type="button"
-                className="haku-dock-btn"
-                title="launcher"
-                aria-label="launcher"
-                onClick={() => setShowLauncher(true)}
-              >
-                󰕰
-              </button>
-              <button
-                type="button"
-                className={`haku-dock-btn${state.openApps.includes('terminal') ? ' on' : ''}`}
-                onClick={() => toggleApp('terminal')}
-                title="terminal"
-              >
-                
-              </button>
-              <button
-                type="button"
-                className={`haku-dock-btn${state.openApps.includes('files') ? ' on' : ''}`}
-                onClick={() => toggleApp('files')}
-                title="files"
-              >
-                
-              </button>
-              <button
-                type="button"
-                className={`haku-dock-btn${state.openApps.includes('browser') ? ' on' : ''}`}
-                onClick={() => toggleApp('browser')}
-                title="browser"
-              >
-                󰖟
-              </button>
-            </div>
-          </>
+          <HakuChrome
+            workspace={workspace}
+            goWorkspace={goWorkspace}
+            clock={clock}
+            volMuted={volMuted}
+            volLevel={volLevel}
+            brightness={brightness}
+            musicPlaying={musicPlaying}
+            track={track}
+            cavaLevels={cavaLevels}
+            monitorOpen={hakuMonitorOpen}
+            openApps={state.openApps}
+            onLauncher={() => setShowLauncher(true)}
+            onSettings={() => setState((s) => ({ ...s, phase: 'setup' }))}
+            onClock={openClock}
+            onToggleMusic={toggleMusic}
+            onOpenLyrics={() => setShowLyrics(true)}
+            onToggleMonitor={() => setHakuMonitorOpen((v) => !v)}
+            onCycleBrightness={cycleBrightness}
+            onToggleVol={toggleVol}
+            onBattery={toastBattery}
+            onPower={() => {
+              pushToast('wlogout · still larping')
+              setShowLauncher(true)
+            }}
+            onToggleApp={toggleApp}
+          />
         ) : isEnd4 ? (
-          <>
-            <div className="end4-bar" aria-label="end4 floating bar">
-              <div className="end4-left">
-                <button
-                  type="button"
-                  className="end4-desk"
-                  title="Launcher"
-                  onClick={() => {
-                    setShowKeybinds(false)
-                    setShowLauncher(true)
-                  }}
-                >
-                  Desktop
-                </button>
-                <button
-                  type="button"
-                  className="end4-ws-label"
-                  title="Next workspace"
-                  onClick={cycleNextWorkspace}
-                >
-                  Workspace {workspace}
-                </button>
-              </div>
-              <div className="end4-center">
-                <div className="end4-ws">
-                  {WORKSPACE_IDS.map((id) => (
-                    <button
-                      key={id}
-                      type="button"
-                      className={`end4-dot${workspace === id ? ' active' : ''}`}
-                      onClick={() => goWorkspace(id)}
-                      aria-label={`Workspace ${id}`}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="end4-right">
-                <button type="button" className="end4-clock" title="Clock / keybinds" onClick={openClock}>
-                  {clock}
-                </button>
-                <button type="button" className="end4-ico" title="Wi-Fi (LARP)" onClick={toggleWifi}>
-                  {wifiOn ? '' : '󰖪'}
-                </button>
-                <button type="button" className="end4-ico" title="Volume (LARP)" onClick={toggleVol}>
-                  {volMuted ? '󰝟' : ''}
-                </button>
-              </div>
-            </div>
-            <aside className="end4-sidebar" aria-label="end4 widgets">
-              <button type="button" className="end4-card end4-clock-card" onClick={openClock} title="Keybinds">
-                <div className="end4-big-time">{ptime}</div>
-                <div className="end4-card-sub">{clock}</div>
-              </button>
-              <button type="button" className="end4-card end4-weather-card" onClick={toastWeather} title="Weather (LARP)">
-                <div className="end4-weather-temp">{weatherTemp}°C</div>
-                <div className="end4-card-sub">partly cloudy · LARP City</div>
-                <div className="end4-weather-meta">💧 48% · 🌬 3 m/s</div>
-              </button>
-              <button
-                type="button"
-                className="end4-card end4-user-card"
-                title="User (LARP)"
-                onClick={() => pushToast(`Hi, ${state.identity.displayName}`)}
-              >
-                <div className="end4-avatar">{(state.identity.displayName || 'L').charAt(0).toUpperCase()}</div>
-                <div>
-                  <div className="end4-hi">Hi, {state.identity.displayName}</div>
-                  <div className="end4-card-sub">Good evening · visual LARP</div>
-                </div>
-              </button>
-              <div className="end4-card end4-music-card">
-                <div className="end4-album" />
-                <div className="end4-track">
-                  <div className="end4-song">LARP Anthem</div>
-                  <div className="end4-card-sub">Fake Artist</div>
-                  <div className="end4-transport">
-                    <button
-                      type="button"
-                      className="end4-transport-btn"
-                      title="Previous"
-                      onClick={() => pushToast('⏮ skip back · still larping')}
-                    >
-                      ⏮
-                    </button>
-                    <button
-                      type="button"
-                      className="end4-transport-btn"
-                      title="Play/Pause"
-                      onClick={() => {
-                        setMusicPlaying((v) => {
-                          pushToast(v ? '⏸ paused (fake)' : '▶ playing (fake)')
-                          return !v
-                        })
-                      }}
-                    >
-                      {musicPlaying ? '⏸' : '⏯'}
-                    </button>
-                    <button
-                      type="button"
-                      className="end4-transport-btn"
-                      title="Next"
-                      onClick={() => pushToast('⏭ skip · next LARP track')}
-                    >
-                      ⏭
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </aside>
-          </>
+          <End4Chrome
+            workspace={workspace}
+            goWorkspace={goWorkspace}
+            cycleNextWorkspace={cycleNextWorkspace}
+            clock={clock}
+            ptime={ptime}
+            wifiOn={wifiOn}
+            volMuted={volMuted}
+            musicPlaying={musicPlaying}
+            track={track}
+            weatherTemp={weatherTemp}
+            displayName={state.identity.displayName}
+            onLauncher={() => {
+              setShowKeybinds(false)
+              setShowLauncher(true)
+            }}
+            onClock={openClock}
+            onToggleWifi={toggleWifi}
+            onToggleVol={toggleVol}
+            onOpenLyrics={() => setShowLyrics(true)}
+            onToggleMusic={toggleMusic}
+            onSkip={() => skipTrack(1)}
+            onWeather={toastWeather}
+            onUser={() => pushToast(`Hi, ${state.identity.displayName}`)}
+          />
         ) : (
           <div className="panel">
             <div className="panel-left">
@@ -1191,6 +1071,7 @@ export default function App() {
         )}
 
         {!isRiceDesktop && (
+
           <div className="icons">
             <button type="button" onClick={() => toggleApp('terminal')}>
               <span>🖥️</span>
@@ -1364,12 +1245,25 @@ export default function App() {
         {showLauncher && (
           <Launcher riceClass={riceClassName} onLaunch={handleLauncher} onClose={() => setShowLauncher(false)} />
         )}
+        {showLyrics && (
+          <LyricsPanel
+            track={track}
+            current={lyricLine}
+            playing={musicPlaying}
+            cavaLevels={cavaLevels}
+            onClose={() => setShowLyrics(false)}
+            onTogglePlay={toggleMusic}
+            onPrev={() => skipTrack(-1)}
+            onNext={() => skipTrack(1)}
+          />
+        )}
         {showKeybinds && <KeybindOverlay onClose={() => setShowKeybinds(false)} />}
+
         <ToastStack toasts={toasts} />
       </div>
 
       {showChrome && (
-        <div className="export-bar">
+        <div className={`export-bar${riceClassName}`} data-larp-chrome>
           <button onClick={() => setState((s) => ({ ...s, phase: 'setup' }))}>Setup</button>
           <button
             type="button"
@@ -1457,7 +1351,8 @@ export default function App() {
       {showPeek && (
         <button
           type="button"
-          className="export-peek"
+          className={`export-peek${riceClassName}`}
+          data-larp-chrome
           title="Show bar (H)"
           onClick={() => setState((s) => ({ ...s, showExportBar: true }))}
         >

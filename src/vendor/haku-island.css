@@ -1,0 +1,245 @@
+﻿/* Port of hakuspace waybar/island/style.css + dockbar/style.css */
+
+.rice-hakuspace .panel { display: none; }
+
+.rice-hakuspace .haku-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none;
+  font-family: var(--nf);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent, #E8DCC8);
+  background: transparent;
+}
+
+.rice-hakuspace .haku-left-stack,
+.rice-hakuspace .haku-right-stack {
+  display: flex;
+  align-items: flex-start;
+  pointer-events: auto;
+}
+
+.rice-hakuspace .haku-box {
+  pointer-events: auto;
+  margin: 8px;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.rice-hakuspace button.haku-ico,
+.rice-hakuspace button.haku-mod.nf-monitor,
+.rice-hakuspace button.haku-mod.nf-power,
+.rice-hakuspace button.haku-mod.nf-bell {
+  min-width: 28px;
+  min-height: 18px;
+}
+
+.rice-hakuspace .haku-mod,
+.rice-hakuspace .haku-ico,
+.rice-hakuspace .haku-clock,
+.rice-hakuspace .haku-mpris,
+.rice-hakuspace .haku-tray {
+  margin: 1px;
+  padding: 0 10px;
+  min-width: 20px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-family: inherit;
+  font-weight: 700;
+  /* after the font shorthand, or it resets line-height */
+  /* every module is one 18px line box, so sibling islands match height */
+  min-height: 18px;
+  line-height: 18px;
+  white-space: nowrap;
+  border-radius: 4px;
+  transition: all 1s cubic-bezier(0, 0.5, 0.35, 1);
+}
+
+.rice-hakuspace .haku-mod:hover,
+.rice-hakuspace .haku-ico:hover,
+.rice-hakuspace .haku-clock:hover,
+.rice-hakuspace .haku-mpris:hover,
+.rice-hakuspace .haku-cava:hover,
+.rice-hakuspace .haku-cava-ico:hover {
+  color: #000000;
+  background-color: var(--accent, #E8DCC8);
+  padding: 0 20px;
+}
+
+.rice-hakuspace .haku-ws {
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+
+.rice-hakuspace button.haku-pill {
+  display: inline-block;
+  background-color: var(--accent, #E8DCC8);
+  border-radius: 4px;
+  padding: 0 6px;
+  margin: 0 3px;
+  min-width: 10px;
+  min-height: 18px;
+  height: 18px;
+  opacity: 0.5;
+  border: 0;
+  cursor: pointer;
+  transition: all 1s cubic-bezier(0, 0.5, 0.35, 1);
+}
+
+.rice-hakuspace button.haku-pill.active {
+  min-width: 40px;
+  width: 40px;
+  opacity: 1;
+}
+
+.rice-hakuspace button.haku-pill:hover {
+  padding: 0 20px;
+  min-width: 40px;
+}
+
+.rice-hakuspace .haku-cava {
+  display: inline-flex;
+  align-items: flex-end;
+  margin: 1px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  letter-spacing: -0.08em;
+  font-size: 12px;
+  min-height: 18px;
+  line-height: 18px;
+  border-radius: 4px;
+}
+
+.rice-hakuspace .haku-cava-ico {
+  margin: 1px;
+  padding: 0 10px;
+  min-height: 18px;
+  line-height: 18px;
+  border-radius: 4px;
+}
+
+/* group/trays is a bare tray upstream: icon-size 18, spacing 10, no hover */
+.rice-hakuspace .haku-tray {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+}
+
+.rice-hakuspace .haku-mpris {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rice-hakuspace .haku-monitor-stats {
+  display: flex;
+  align-items: center;
+}
+
+.rice-hakuspace .haku-dock {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.5));
+  border-radius: 20px;
+  padding: 2px 8px;
+  margin: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+  font-family: var(--nf);
+}
+
+.rice-hakuspace .haku-dock-btn {
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 20px;
+  border: 0;
+  background: transparent;
+  color: var(--accent, #E8DCC8);
+  font-size: 1.05rem;
+  padding: 8px 12px;
+  margin: 0;
+  border-bottom: 3px solid transparent;
+  transition: all 0.8s cubic-bezier(0, 0.5, 0.35, 1);
+}
+
+.rice-hakuspace .haku-dock-btn.on {
+  background-color: rgba(50, 50, 50, 0.5);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+  border-bottom: 3px solid var(--accent, #E8DCC8);
+  margin-left: 18px;
+  margin-right: 18px;
+}
+
+.rice-hakuspace .haku-dock-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+  padding: 8px 30px;
+}
+
+.rice-hakuspace .haku-dock-sep {
+  width: 0;
+  height: 18px;
+  border-left: 2px solid rgba(255, 255, 255, 0.2);
+  margin: 0 10px;
+}
+
+.rice-hakuspace .windows { inset: 12px; top: 56px; bottom: 72px; }
+.rice-hakuspace .window {
+  border-radius: 16px;
+  border-width: 1px;
+  border-color: color-mix(in srgb, var(--accent, #E8DCC8) 55%, transparent);
+  background: rgba(12, 12, 14, 0.82);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+.rice-hakuspace .window.kitty {
+  width: min(640px, 86vw);
+  min-height: 320px;
+}
+.rice-hakuspace .titlebar {
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--accent, #E8DCC8);
+  font-family: var(--nf);
+  font-size: 12px;
+}
+.rice-hakuspace .kitty-term {
+  color: #E8DCC8;
+  font-family: var(--nf);
+}
+.rice-hakuspace .wall-picker-panel {
+  border-color: #E8DCC8;
+  background: rgba(0, 0, 0, 0.88);
+}
+.rice-hakuspace .wall-picker-head { color: #E8DCC8; }
+.rice-hakuspace .wall-thumb.active,
+.rice-hakuspace .wall-thumb:hover { border-color: #E8DCC8; }
+.rice-hakuspace .toast { border-color: rgba(232, 220, 200, 0.45); color: #E8DCC8; }
+.rice-hakuspace .launcher-panel,
+.rice-hakuspace .keybind-panel {
+  border-color: #E8DCC8;
+  background: rgba(20, 18, 16, 0.94);
+}

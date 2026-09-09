@@ -1,0 +1,199 @@
+/* end4-pC bar Media.qml + Lyrics.qml, visual LARP only */
+
+.end4-media {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px 2px 4px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, #cbc4cb 16%, transparent);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.end4-media-art {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.end4-media-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+  max-width: 120px;
+}
+
+.end4-media-artist {
+  font-size: 11px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+
+.end4-media-title {
+  font-size: 11px;
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+
+.end4-media-play,
+.end4-media-next,
+.rice-end4 .end4-ico,
+.lyrics-transport button {
+  font-family: "Material Symbols Rounded", var(--nf), sans-serif;
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+  font-size: 18px;
+  line-height: 1;
+  user-select: none;
+}
+
+.end4-media-play,
+.end4-media-next {
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+}
+
+.end4-media-play {
+  width: 40px;
+  height: 23px;
+  background: color-mix(in srgb, #cbc4cb 22%, transparent);
+}
+
+.end4-media-play.on {
+  background: #cbc4cb;
+  color: #141313;
+}
+
+.end4-media-next {
+  width: 26px;
+  height: 26px;
+}
+
+.rice-end4 .end4-ico {
+  opacity: 0.9;
+  padding: 0 4px;
+}
+
+.lyrics-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 16;
+  display: grid;
+  place-items: center;
+  background: rgba(20, 19, 19, 0.35);
+  backdrop-filter: blur(8px);
+}
+
+.lyrics-card {
+  position: relative;
+  width: min(420px, 92vw);
+  height: min(520px, 78vh);
+  border-radius: 28px;
+  overflow: hidden;
+  color: #e6e1e1;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.5);
+  background: #201f20;
+  display: flex;
+  flex-direction: column;
+  padding: 1.1rem 1.2rem 0.9rem;
+}
+
+.lyrics-art {
+  position: absolute;
+  inset: 0;
+  opacity: 0.38;
+  filter: blur(18px);
+  transform: scale(1.15);
+}
+
+.lyrics-cava {
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.12em;
+  opacity: 0.75;
+  font-family: var(--nf);
+  font-size: 13px;
+  margin-bottom: 0.4rem;
+}
+
+.lyrics-meta {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 0.75rem;
+}
+
+.lyrics-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.lyrics-artist {
+  opacity: 0.7;
+  font-size: 0.85rem;
+  margin-top: 0.15rem;
+}
+
+.lyrics-lines {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.lyrics-line {
+  margin: 0;
+  text-align: left;
+  color: #fff;
+  opacity: 0.15;
+  font-size: 0.78rem;
+  transition: opacity 250ms cubic-bezier(0.33, 1, 0.68, 1), font-size 250ms ease;
+}
+
+.lyrics-line.dist-2 { opacity: 0.35; font-size: 0.85rem; }
+.lyrics-line.dist-1 { opacity: 0.6; font-size: 0.95rem; }
+.lyrics-line.current {
+  opacity: 1;
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+
+.lyrics-transport {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 0.85rem;
+  align-items: center;
+  padding-top: 0.6rem;
+}
+
+.lyrics-transport button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.lyrics-play {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #cbc4cb 28%, transparent);
+}
+
+.lyrics-close { opacity: 0.7; }

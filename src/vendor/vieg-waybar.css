@@ -1,0 +1,124 @@
+﻿/* Port of ViegPhunt/Dotfiles .config/waybar/style.css + colors.css */
+
+.rice-viegphunt {
+  --vieg-background: #1e1e2e;
+  --vieg-foreground: #cdd6f4;
+  --vieg-select: #585b70;
+  --vieg-pink: #f5c2e7;
+  --vieg-purple: #cba6f7;
+  --vieg-red: #f38ba8;
+  --vieg-orange: #fab387;
+  --vieg-yellow: #f9e2af;
+  --vieg-green: #a6e3a1;
+  --vieg-blue: #89b4fa;
+  --vieg-gray: #45475a;
+}
+
+.rice-viegphunt .panel.waybar {
+  top: 0;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--vieg-background) 60%, transparent);
+  border-bottom: 0;
+  border-radius: 0;
+  font-family: var(--nf);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0;
+  min-height: 28px;
+}
+
+.rice-viegphunt .workspaces {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  margin: 1px 0;
+}
+
+.rice-viegphunt .ws {
+  color: var(--vieg-foreground);
+  padding: 0 5px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  /* upstream * { font-size: 13px }, don't inherit the app button size */
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 0;
+  line-height: 18px;
+}
+
+.rice-viegphunt .ws:hover {
+  color: var(--vieg-pink);
+  border-bottom: 1px solid var(--vieg-pink);
+  padding: 0 8px;
+}
+
+.rice-viegphunt .ws.active {
+  color: var(--vieg-pink);
+  border: 2px solid var(--vieg-pink);
+  padding: 0 8px;
+  margin: 0 2px;
+}
+
+.rice-viegphunt .wb {
+  color: var(--vieg-foreground);
+  margin: 1px 0;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  font: inherit;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: inherit;
+  /* one 18px line box per module so the bar row is even */
+  line-height: 18px;
+}
+
+/* upstream hovers custom-power/bluetooth/network/battery/pulseaudio/clock, not tray */
+.rice-viegphunt .wb:not(.tray):hover {
+  background-color: color-mix(in srgb, var(--vieg-select) 60%, transparent);
+}
+
+.rice-viegphunt .wb.power {
+  margin-left: 10px;
+  padding: 0 10px 0 15px;
+}
+
+.rice-viegphunt .wb.bt { color: var(--vieg-yellow); }
+.rice-viegphunt .wb.net { color: var(--vieg-green); }
+.rice-viegphunt .wb.bat { color: var(--vieg-purple); }
+.rice-viegphunt .wb.vol { color: var(--vieg-orange); }
+.rice-viegphunt .wb.clock {
+  margin-right: 10px;
+  color: var(--vieg-blue);
+}
+
+/* tray icon-size 20, spacing 10 */
+.rice-viegphunt .wb.tray {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--vieg-foreground);
+  padding: 0 10px;
+  font-size: 20px;
+  line-height: 20px;
+}
+
+.rice-viegphunt .ws.urgent {
+  background-color: var(--vieg-red);
+  padding: 0 8px;
+}
+
+.rice-mocha-alt .ws.active {
+  color: var(--vieg-blue);
+  border-color: var(--vieg-blue);
+}
+
+.rice-mocha-alt .ws:hover {
+  color: var(--vieg-blue);
+  border-bottom-color: var(--vieg-blue);
+}

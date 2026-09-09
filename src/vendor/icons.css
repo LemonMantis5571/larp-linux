@@ -1,0 +1,74 @@
+﻿/* Nerd Font glyphs via CSS so JSX stays ASCII. */
+
+.nf-search::before,
+.nf-gear::before,
+.nf-note::before,
+.nf-monitor::before,
+.nf-bright::before,
+.nf-vol::before,
+.nf-mute::before,
+.nf-bat::before,
+.nf-wifi::before,
+.nf-wifi-off::before,
+.nf-bt::before,
+.nf-bt-off::before,
+.nf-bolt::before,
+.nf-rec::before,
+.nf-power::before,
+.nf-bell::before,
+.nf-grid::before,
+.nf-term::before,
+.nf-folder::before,
+.nf-web::before,
+.nf-power-dot::before,
+.nf-pkg::before,
+.nf-clip::before,
+.nf-plug::before,
+.nf-warn::before,
+.nf-mpris-on::before,
+.nf-mpris-off::before {
+  font-family: var(--nf);
+  font-style: normal;
+  font-weight: 400;
+}
+
+.nf-search::before { content: "\f002"; }
+.nf-gear::before { content: "\f013"; }
+/* hakuspace custom/cavaunderbar is literally 󰝚 */
+.nf-note::before { content: "\f075a"; }
+.nf-monitor::before { content: "\f0379"; }
+.nf-bright::before { content: "\f185"; }
+.nf-vol::before { content: "\f028"; }
+/* U+F6A9 and U+F6AC are Font Awesome 5 and are absent from Nerd Fonts, so
+   both rendered as tofu. These are the Material Design equivalents, and
+   󰝟 is what hakuspace uses for pulseaudio format-muted. */
+.nf-mute::before { content: "\f075f"; }
+.nf-bat::before { content: "\f240"; }
+.nf-wifi::before { content: "\f1eb"; }
+.nf-wifi-off::before { content: "\f05a9"; }
+/* ViegPhunt bluetooth is 󰂯 / 󰂲 */
+.nf-bt::before { content: "\f00af"; }
+.nf-bt-off::before { content: "\f00b2"; }
+.nf-bolt::before { content: "\f0e7"; }
+.nf-rec::before { content: "\f03d"; }
+.nf-power::before { content: "\f011"; }
+.nf-bell::before { content: "\f0f3"; }
+.nf-grid::before { content: "\f00a"; }
+.nf-term::before { content: "\f120"; }
+.nf-folder::before { content: "\f07b"; }
+.nf-web::before { content: "\f0ac"; }
+/* ViegPhunt custom/power is ⭘ */
+.nf-power-dot::before { content: "\2b58"; }
+.nf-pkg::before { content: "\f187"; }
+.nf-clip::before { content: "\f0c5"; }
+.nf-plug::before { content: "\f1e6"; }
+.nf-warn::before { content: "\f071"; }
+.nf-mpris-on::before { content: "\f0f4"; }
+.nf-mpris-off::before { content: "\f04c"; }
+
+i[class^="nf-"],
+span[class^="nf-"],
+button[class*=" nf-"],
+button[class^="nf-"] {
+  font-style: normal;
+}

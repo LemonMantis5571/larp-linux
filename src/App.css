@@ -1,7 +1,10 @@
-:root {
+﻿:root {
   color: #e8e8ed;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   background: #0b0d12;
+  /* Symbols Nerd Font carries the full icon set and catches anything the
+     JetBrainsMono patch is missing, so no glyph falls through to tofu. */
+  --nf: "JetBrainsMono Nerd Font", "Symbols Nerd Font", "JetBrains Mono", ui-monospace, monospace;
 }
 
 * { box-sizing: border-box; }
@@ -25,7 +28,59 @@ body { margin: 0; min-height: 100vh; background: #0b0d12; }
   max-width: 720px;
   backdrop-filter: blur(12px);
 }
-.setup { margin: 2rem auto; max-width: 880px; }
+/* —— Setup as a floating Hypr window over the live wallpaper —— */
+.setup-shell {
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+}
+.setup-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 9, 14, 0.62);
+  backdrop-filter: blur(10px);
+}
+.setup {
+  position: relative;
+  margin: 0;
+  max-width: 940px;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 2px solid var(--accent, #89b4fa);
+  background: rgba(17, 17, 27, 0.95);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+}
+.setup-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.85rem;
+  background: rgba(0, 0, 0, 0.45);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  font-family: var(--nf);
+  font-size: 12px;
+}
+.setup-dots { display: inline-flex; gap: 6px; }
+.setup-dots i { width: 10px; height: 10px; border-radius: 999px; background: #f38ba8; }
+.setup-dots i:nth-child(2) { background: #f9e2af; }
+.setup-dots i:nth-child(3) { background: #a6e3a1; }
+.setup-title { color: color-mix(in srgb, var(--accent, #89b4fa) 85%, #ffffff); }
+.setup-tag {
+  margin-left: auto;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+.setup > header { padding: 1.4rem 1.6rem 0; }
+.setup > header p { margin: 0; color: #b9c2d0; font-size: 0.92rem; }
+.setup h1 { color: #f2f4f8; }
 .eyebrow { letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.7; font-size: 0.75rem; }
 h1 { margin: 0.4rem 0 0.8rem; font-size: clamp(1.6rem, 3vw, 2.4rem); }
 .primary {
@@ -38,18 +93,89 @@ h1 { margin: 0.4rem 0 0.8rem; font-size: clamp(1.6rem, 3vw, 2.4rem); }
   cursor: pointer;
 }
 button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: inherit; padding: 0.55rem 0.9rem; }
-.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.2rem; }
-.setup-grid label { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.9rem; }
+.setup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.25rem;
+  margin-top: 1.2rem;
+  padding: 0 1.6rem;
+}
+.setup-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #9aa6b8;
+}
 .setup-grid .wide { grid-column: 1 / -1; }
 .setup-grid input, .setup-grid select, .setup-grid textarea {
-  background: rgba(0,0,0,0.35);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 10px;
-  color: inherit;
-  padding: 0.55rem 0.7rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  color: #f2f4f8;
+  padding: 0.6rem 0.75rem;
+  /* labels are small caps, so the values themselves carry the readability */
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
-.setup-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem; }
-.note { color: #c6d4ff; font-size: 0.9rem; }
+.setup-grid textarea {
+  font-family: var(--nf);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+.setup-grid input:focus-visible,
+.setup-grid select:focus-visible,
+.setup-grid textarea:focus-visible {
+  outline: 2px solid var(--accent, #89b4fa);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.setup-grid select option { background: #11111b; color: #f2f4f8; }
+.setup-grid input[type="file"] { padding: 0.4rem; color: #b9c2d0; }
+.setup-grid input[type="file"]::file-selector-button {
+  margin-right: 0.7rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f2f4f8;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.accent-row { display: flex; align-items: center; gap: 0.6rem; }
+.accent-row input[type="color"] {
+  width: 56px;
+  height: 40px;
+  padding: 2px;
+  cursor: pointer;
+}
+.accent-row code {
+  font-family: var(--nf);
+  font-size: 0.9rem;
+  color: #f2f4f8;
+  text-transform: uppercase;
+}
+.setup-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.4rem;
+  padding: 1.1rem 1.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.25);
+}
+.setup-actions .primary {
+  background: var(--accent, #89b4fa);
+  color: #11111b;
+}
+.note { color: #cbd6ee; font-size: 0.88rem; text-transform: none; letter-spacing: 0; }
 
 .shell { position: relative; }
 .stage {
@@ -161,41 +287,70 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
 }
 .skin-kde .export-bar { bottom: 3.2rem; }
 
+/* —— The control bar wears the rice too —— */
+.export-bar.rice-viegphunt {
+  background: color-mix(in srgb, #1e1e2e 88%, transparent);
+  border: 1px solid rgba(245, 194, 231, 0.35);
+  border-radius: 5px;
+  font-family: var(--nf);
+  font-size: 12px;
+  font-weight: 700;
+}
+.export-bar.rice-viegphunt button {
+  border-radius: 5px;
+  border-color: rgba(205, 214, 244, 0.2);
+  background: transparent;
+  color: #cdd6f4;
+}
+.export-bar.rice-viegphunt button:hover { background: rgba(88, 91, 112, 0.6); }
+.export-bar.rice-viegphunt button.primary { background: #f5c2e7; color: #1e1e2e; border-color: transparent; }
+
+.export-bar.rice-mocha-alt { border-color: rgba(137, 180, 250, 0.35); }
+.export-bar.rice-mocha-alt button.primary { background: #89b4fa; }
+
+.export-bar.rice-hakuspace {
+  background: rgba(0, 0, 0, 0.8);
+  border: 0;
+  border-radius: 4px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  font-family: var(--nf);
+  font-size: 12px;
+  font-weight: 700;
+}
+.export-bar.rice-hakuspace button {
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #e8dcc8;
+  transition: all 0.4s cubic-bezier(0, 0.5, 0.35, 1);
+}
+.export-bar.rice-hakuspace button:hover { background: #e8dcc8; color: #000; }
+.export-bar.rice-hakuspace button.primary { background: #e8dcc8; color: #000; }
+
+.export-bar.rice-end4 {
+  background: color-mix(in srgb, #201f20 92%, transparent);
+  border: 1px solid color-mix(in srgb, #cbc4cb 26%, transparent);
+  border-radius: 24px;
+  padding: 0.5rem 0.7rem;
+  backdrop-filter: blur(14px);
+  font-size: 12px;
+  font-weight: 600;
+}
+.export-bar.rice-end4 button {
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, #cbc4cb 14%, transparent);
+  color: #e6e1e1;
+}
+.export-bar.rice-end4 button:hover { background: color-mix(in srgb, #cbc4cb 26%, transparent); }
+.export-bar.rice-end4 button.primary { background: #cbc4cb; color: #141313; }
+
+.export-peek.rice-viegphunt { border-radius: 5px; font-family: var(--nf); color: #f5c2e7; }
+.export-peek.rice-hakuspace { border-radius: 4px; font-family: var(--nf); color: #e8dcc8; background: rgba(0,0,0,0.8); }
+.export-peek.rice-end4 { border-radius: 999px; color: #cbc4cb; }
+
 .landing-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
 .primary.ghost { background: transparent; color: #f5c2e7; border: 1px solid #f5c2e7; }
-
-/* —— ViegPhunt / Catppuccin Mocha waybar —— */
-.rice-viegphunt .panel.waybar {
-  top: 0;
-  background: rgba(30, 30, 46, 0.6);
-  border-bottom: 0;
-  border-radius: 0;
-  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 0.2rem 0.4rem;
-  min-height: 28px;
-}
-.rice-viegphunt .workspaces { display: flex; gap: 2px; align-items: center; }
-.rice-viegphunt .ws {
-  color: #cdd6f4;
-  padding: 0 5px;
-  border-radius: 5px;
-  border: none;
-}
-.rice-viegphunt .ws.active {
-  color: #f5c2e7;
-  border: 2px solid #f5c2e7;
-  padding: 0 8px;
-  margin: 0 2px;
-}
-.rice-viegphunt .wb { padding: 0 10px; color: #cdd6f4; }
-.rice-viegphunt .wb.power { margin-left: 10px; padding: 0 10px 0 15px; }
-.rice-viegphunt .wb.bt { color: #f9e2af; }
-.rice-viegphunt .wb.net { color: #a6e3a1; }
-.rice-viegphunt .wb.bat { color: #cba6f7; }
-.rice-viegphunt .wb.vol { color: #fab387; }
-.rice-viegphunt .wb.clock { color: #89b4fa; margin-right: 10px; }
 
 /* Hypr windows: gaps_out 5, gaps_in 2, border 2, rounding 2, active rgba(cdd6f4aa) */
 .rice-viegphunt .windows { inset: 5px; top: 33px; }
@@ -213,21 +368,16 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
 }
 .rice-viegphunt .titlebar {
   background: color-mix(in srgb, var(--accent, #f5c2e7) 14%, #1e1e2e);
-  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+  font-family: var(--nf);
   font-size: 12px;
   color: #94e2d5;
 }
 .rice-viegphunt .term { color: #a6e3a1; }
 .rice-viegphunt .window-body { padding: 0.65rem 0.85rem; }
 
-.rice-mocha-alt .ws.active {
-  color: #89b4fa;
-  border-color: #89b4fa;
-}
-
 /* Ghostty + neoinfo + oh-my-posh (visual CSS only) */
 .ghostty-body {
-  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+  font-family: var(--nf);
   font-size: 12px;
   color: #cdd6f4;
 }
@@ -310,7 +460,7 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   border: 2px solid #cdd6f4;
   border-radius: 8px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.55);
-  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+  font-family: var(--nf);
 }
 .wall-picker-head {
   display: flex;
@@ -376,115 +526,6 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   opacity: 0.85;
 }
 
-/* —— Hakuspace: three floating islands + dock —— */
-.rice-hakuspace .panel { display: none; }
-.rice-hakuspace .haku-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 5;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  pointer-events: none;
-  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--accent, #E8DCC8);
-}
-.rice-hakuspace .haku-island {
-  pointer-events: auto;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 6px 18px;
-  margin-bottom: 5px;
-  box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.4);
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-.rice-hakuspace .haku-left { border-radius: 0 0 30px 0; }
-.rice-hakuspace .haku-center { border-radius: 0 0 30px 30px; }
-.rice-hakuspace .haku-right { border-radius: 0 0 0 30px; }
-.rice-hakuspace .haku-ico { padding: 0 6px; }
-.rice-hakuspace .haku-ws { display: flex; align-items: center; gap: 6px; margin-left: 4px; }
-.rice-hakuspace .haku-pill {
-  display: inline-block;
-  height: 8px;
-  width: 10px;
-  border-radius: 999px;
-  background: var(--accent, #E8DCC8);
-  opacity: 0.5;
-}
-.rice-hakuspace .haku-pill.active {
-  width: 40px;
-  opacity: 1;
-}
-.rice-hakuspace .haku-clock { letter-spacing: 0.02em; white-space: nowrap; }
-.rice-hakuspace .haku-mod { padding: 0 6px; white-space: nowrap; }
-
-.rice-hakuspace .haku-dock {
-  position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 6;
-  display: flex;
-  gap: 0.55rem;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 999px;
-  padding: 0.45rem 0.85rem;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
-  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
-}
-.rice-hakuspace .haku-dock-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  border: 0;
-  background: transparent;
-  color: var(--accent, #E8DCC8);
-  font-size: 1.15rem;
-  display: grid;
-  place-items: center;
-  padding: 0;
-}
-.rice-hakuspace .haku-dock-btn.on,
-.rice-hakuspace .haku-dock-btn:hover {
-  background: color-mix(in srgb, var(--accent, #E8DCC8) 22%, transparent);
-}
-
-.rice-hakuspace .windows { inset: 12px; top: 48px; bottom: 72px; }
-.rice-hakuspace .window {
-  border-radius: 16px;
-  border-width: 1px;
-  border-color: color-mix(in srgb, var(--accent, #E8DCC8) 55%, transparent);
-  background: rgba(12, 12, 14, 0.82);
-  box-shadow: 0 16px 40px rgba(0,0,0,0.5);
-}
-.rice-hakuspace .window.kitty {
-  width: min(640px, 86vw);
-  min-height: 320px;
-}
-.rice-hakuspace .titlebar {
-  background: rgba(0, 0, 0, 0.55);
-  color: var(--accent, #E8DCC8);
-  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
-  font-size: 12px;
-}
-.rice-hakuspace .kitty-term {
-  color: #E8DCC8;
-  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
-}
-.rice-hakuspace .wall-picker-panel {
-  border-color: #E8DCC8;
-  background: rgba(0, 0, 0, 0.88);
-}
-.rice-hakuspace .wall-picker-head { color: #E8DCC8; }
-.rice-hakuspace .wall-thumb.active,
-.rice-hakuspace .wall-thumb:hover { border-color: #E8DCC8; }
-
 /* —— end4-pC Material 3 float bar + sidebar widgets —— */
 .rice-end4 .panel { display: none; }
 .rice-end4 .end4-bar {
@@ -530,7 +571,7 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
 }
 .rice-end4 .end4-clock { white-space: nowrap; }
 .rice-end4 .end4-ico {
-  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+  font-family: var(--nf);
   opacity: 0.9;
 }
 
@@ -574,16 +615,6 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   color: #141313;
 }
 .rice-end4 .end4-hi { font-weight: 700; }
-.rice-end4 .end4-music-card { display: flex; gap: 0.75rem; align-items: center; }
-.rice-end4 .end4-album {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #cbc4cb, #141313);
-  flex: 0 0 auto;
-}
-.rice-end4 .end4-song { font-weight: 650; }
-.rice-end4 .end4-transport { margin-top: 0.35rem; letter-spacing: 0.2em; opacity: 0.85; }
 
 .rice-end4 .windows { inset: 18px; top: 72px; left: min(310px, 34vw); }
 .rice-end4 .window,
@@ -633,45 +664,6 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   color: var(--accent, #89b4fa);
 }
 
-.rice-viegphunt button.wb.net,
-.rice-viegphunt button.wb.bat,
-.rice-viegphunt button.wb.clock,
-.rice-viegphunt .wb.bt,
-.rice-viegphunt .wb.vol {
-  background: transparent;
-  border: 0;
-  border-radius: 5px;
-  cursor: pointer;
-  font: inherit;
-  font-family: inherit;
-  font-weight: 700;
-  font-size: inherit;
-  line-height: inherit;
-  color: inherit;
-}
-.rice-viegphunt button.wb.net:hover,
-.rice-viegphunt button.wb.bat:hover,
-.rice-viegphunt button.wb.clock:hover,
-.rice-viegphunt .wb.bt:hover,
-.rice-viegphunt .wb.vol:hover { background: rgba(255,255,255,0.06); }
-
-.rice-hakuspace button.haku-clock,
-.rice-hakuspace button.haku-mod {
-  background: transparent;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  font: inherit;
-  font-family: inherit;
-  padding: 0 6px;
-  white-space: nowrap;
-}
-.rice-hakuspace button.haku-clock:hover,
-.rice-hakuspace button.haku-mod:hover {
-  background: rgba(255,255,255,0.06);
-  border-radius: 8px;
-}
-
 .rice-end4 button.end4-desk,
 .rice-end4 button.end4-ws-label,
 .rice-end4 button.end4-clock,
@@ -684,7 +676,6 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   padding: 0;
 }
 .rice-end4 button.end4-ico {
-  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
   opacity: 0.9;
   padding: 0 4px;
 }
@@ -711,50 +702,11 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   border-color: color-mix(in srgb, #cbc4cb 40%, transparent);
 }
 
-.rice-end4 .end4-transport {
-  display: flex;
-  gap: 0.55rem;
-  align-items: center;
-  letter-spacing: 0;
-}
-.rice-end4 .end4-transport-btn {
-  background: transparent;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  font: inherit;
-  padding: 0.15rem 0.35rem;
-  opacity: 0.9;
-}
-.rice-end4 .end4-transport-btn:hover { opacity: 1; }
-
 /* clickable chrome cursor hint */
 .wb,
 .haku-mod,
 .end4-ico,
 .end4-card { cursor: pointer; }
-
-.rice-hakuspace .haku-ico {
-  background: transparent;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  font: inherit;
-}
-.rice-hakuspace button.haku-pill {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(232, 220, 200, 0.35);
-  cursor: pointer;
-}
-.rice-hakuspace button.haku-pill.active {
-  width: 18px;
-  background: #E8DCC8;
-}
 
 .rice-end4 button.end4-dot {
   display: inline-block;
@@ -824,7 +776,7 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   border: 2px solid #cdd6f4;
   border-radius: 10px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.55);
-  font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, monospace;
+  font-family: var(--nf);
   overflow: hidden;
 }
 .launcher-input {
@@ -899,31 +851,3 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   white-space: nowrap;
 }
 
-.rice-viegphunt button.wb {
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  font: inherit;
-  font-family: 'JetBrainsMono Nerd Font', ui-monospace, monospace;
-  font-weight: 700;
-}
-.rice-viegphunt button.wb.launch,
-.rice-viegphunt button.wb.term {
-  color: #cdd6f4;
-}
-.rice-viegphunt button.wb.launch:hover,
-.rice-viegphunt button.wb.term:hover {
-  color: #f5c2e7;
-}
-
-.rice-viegphunt button.wb.power {
-  color: #cdd6f4;
-  cursor: pointer;
-}
-.rice-viegphunt button.wb.launch,
-.rice-viegphunt button.wb.term {
-  color: #89b4fa;
-  text-transform: lowercase;
-  letter-spacing: 0.02em;
-  padding: 0 8px;
-}
