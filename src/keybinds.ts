@@ -24,6 +24,7 @@ export const KEYBINDS: KeybindEntry[] = [
   { keys: 'Click cava / play', action: 'Play or pause fake MPRIS' },
   { keys: 'Click mpris / media', action: 'Open lyrics overlay' },
   { keys: 'Type in terminal', action: 'Fake shell (clear, neofetch, ls…)' },
+  { keys: '↑ ↓ Enter / e', action: 'Boot menu: select, boot, or edit' },
 ]
 
 export function isTypingTarget(el: EventTarget | null): boolean {

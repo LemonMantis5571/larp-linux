@@ -2,7 +2,16 @@ import type { CSSProperties } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toPng } from 'html-to-image'
 import { parseDots } from './dots'
-import { HYPR_RICE_IDS, RICES, riceById, type RiceId } from './rices'
+import {
+  firstRiceForSkin,
+  isRiceId,
+  RICES,
+  riceById,
+  ricesForSkin,
+  SKIN_LABEL,
+  SKIN_ORDER,
+  type RiceId,
+} from './rices'
 import type { AppId, AppState, ExportPreset, Identity, Skin, Toast, WorkspaceId } from './types'
 import { WALLPAPERS, cycleWallpaper } from './wallpapers'
 import { cssBgUrl, hotlinkLikelyBlocked, normalizeWallUrl, probeImage } from './wallUrl'
@@ -17,7 +26,13 @@ import { CAVA_BARS, LARP_TRACKS, nextCavaLevels } from './music'
 import { ViegWaybar } from './ViegWaybar'
 import { HakuChrome } from './HakuChrome'
 import { End4Chrome } from './End4Chrome'
+import { LimineLanding } from './LimineLanding'
+import { GnomeChrome } from './GnomeChrome'
+import { KdeChrome } from './KdeChrome'
+import { HyprBar } from './HyprBar'
 import './App.css'
+import './de-chrome.css'
+import './responsive.css'
 import './vendor/vieg-waybar.css'
 import './vendor/haku-island.css'
 import './vendor/icons.css'
@@ -40,7 +55,7 @@ const skinWm: Record<Skin, string> = {
   kde: 'KWin (Plasma)',
 }
 
-type ClockStyle = 'plain' | 'vieg' | 'haku' | 'end4'
+type ClockStyle = 'plain' | 'vieg' | 'haku' | 'end4' | 'gnome' | 'kde'
 
 function clockNow(style: ClockStyle) {
   const d = new Date()
@@ -67,6 +82,11 @@ function clockNow(style: ClockStyle) {
     const yyyy = d.getFullYear()
     return `${days[d.getDay()]} ${dd}/${mm}/${yyyy} ~ ${hh}:${mi}`
   }
+  if (style === 'gnome') {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    return `${days[d.getDay()]} ${hh}:${mi}`
+  }
+  if (style === 'kde') return `${hh}:${mi}`
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
@@ -153,27 +173,31 @@ export default function App() {
   const [wsFlash, setWsFlash] = useState(false)
   const track = LARP_TRACKS[trackIndex] ?? LARP_TRACKS[0]
 
-  const isVieg = state.rice === 'viegphunt' && state.skin === 'hyprland'
-  const isMochaAlt = state.rice === 'mocha-alt' && state.skin === 'hyprland'
-  const isViegLike = isVieg || isMochaAlt
-  const isHaku = state.rice === 'hakuspace' && state.skin === 'hyprland'
-  const isEnd4 = state.rice === 'end4' && state.skin === 'hyprland'
-  const isRiceDesktop = isViegLike || isHaku || isEnd4
   const pack = riceById(state.rice)
+  const isViegLike = pack.chrome === 'vieg'
+  const isHaku = pack.chrome === 'haku'
+  const isEnd4 = pack.chrome === 'end4'
+  const isHyprBar = pack.chrome === 'hypr'
+  const isGnome = pack.chrome === 'gnome'
+  const isKde = pack.chrome === 'kde'
+  const showDesktopIcons = pack.chrome === 'plain' || pack.chrome === 'kde'
   const hasWallPicker = pack.walls.length > 1
   const wallList = pack.walls.length ? pack.walls : WALLPAPERS.map((w) => w.url)
-  const clockStyle: ClockStyle = isHaku ? 'haku' : isEnd4 ? 'end4' : isViegLike ? 'vieg' : 'plain'
+  const clockStyle: ClockStyle = isHaku
+    ? 'haku'
+    : isEnd4
+      ? 'end4'
+      : isViegLike
+        ? 'vieg'
+        : isGnome
+          ? 'gnome'
+          : isKde
+            ? 'kde'
+            : 'plain'
   const useGhostty = isViegLike
   const workspace = (state.workspace ?? 1) as WorkspaceId
-  const riceClassName = isVieg
-    ? ' rice-viegphunt'
-    : isMochaAlt
-      ? ' rice-viegphunt rice-mocha-alt'
-      : isHaku
-        ? ' rice-hakuspace'
-        : isEnd4
-          ? ' rice-end4'
-          : ''
+  const riceClassName = pack.className ? ` ${pack.className}` : ''
+  const windowLayout = isEnd4 ? 'end4' : isGnome ? 'gnome' : isKde ? 'kde' : 'default'
 
   const pushToast = useCallback((message: string) => {
     const id = toastSeq++
@@ -208,27 +232,17 @@ export default function App() {
   useEffect(() => () => stopDemo(), [stopDemo])
 
   const shellCtx: ShellContext = useMemo(() => {
-    const riceLabel =
-      isVieg
-        ? 'ViegPhunt (LARP)'
-        : isMochaAlt
-          ? 'Mocha Alt (LARP pack)'
-          : isHaku
-            ? 'Hakuspace (LARP)'
-            : isEnd4
-              ? 'end4-pC (LARP)'
-              : 'Default'
     return {
       username: state.identity.username,
       hostname: state.identity.hostname,
       cwd: `/home/${state.identity.username}`,
-      riceLabel,
+      riceLabel: pack.label,
       wm: state.identity.wm,
       cpu: state.identity.cpu,
       gpu: state.identity.gpu,
-      terminalName: isHaku || isEnd4 ? 'kitty' : 'ghostty',
+      terminalName: pack.terminal,
     }
-  }, [state.identity, isVieg, isMochaAlt, isHaku, isEnd4])
+  }, [state.identity, pack.label, pack.terminal])
 
   const runShellLine = useCallback(
     (raw: string) => {
@@ -651,16 +665,6 @@ export default function App() {
 
   const neofetchLines = useMemo(() => {
     const i = state.identity
-    const riceLine =
-      isVieg
-        ? [{ k: 'Rice', v: 'ViegPhunt (LARP)' }]
-        : isMochaAlt
-          ? [{ k: 'Rice', v: 'Mocha Alt (LARP pack)' }]
-          : isHaku
-            ? [{ k: 'Rice', v: 'Hakuspace (LARP)' }]
-            : isEnd4
-              ? [{ k: 'Rice', v: 'end4-pC (LARP)' }]
-              : []
     return [
       { k: 'OS', v: 'Arch Linux x86_64' },
       { k: 'Host', v: 'LARP Linux (not real)' },
@@ -669,38 +673,40 @@ export default function App() {
       { k: 'CPU', v: i.cpu },
       { k: 'GPU', v: i.gpu },
       { k: 'Memory', v: '64 GiB (fake)' },
-      { k: 'Terminal', v: isHaku ? 'kitty' : isEnd4 ? 'kitty' : 'ghostty' },
-      ...riceLine,
+      { k: 'Terminal', v: pack.terminal },
+      { k: 'Rice', v: `${pack.label} (LARP)` },
     ]
-  }, [state.identity, isVieg, isMochaAlt, isHaku, isEnd4])
+  }, [state.identity, pack.terminal, pack.label])
 
   function applyRice(id: RiceId) {
     const next = riceById(id)
     setState((s) => ({
       ...s,
       rice: id,
-      skin: HYPR_RICE_IDS.includes(id) ? 'hyprland' : s.skin,
+      skin: next.skin,
       accent: next.accent,
       border: next.border,
       wallpaper: next.wallpaper,
       dotsText: next.dotsSample,
       dotsNote: next.credit || s.dotsNote,
+      identity: { ...s.identity, wm: skinWm[next.skin] },
       showWallPicker: false,
     }))
   }
 
-  function quickLarp(id: RiceId) {
+  function bootRice(id: RiceId, phase: 'setup' | 'stage') {
     const next = riceById(id)
     setState((s) => ({
       ...s,
-      phase: 'setup',
+      phase,
       rice: id,
-      skin: 'hyprland',
+      skin: next.skin,
       accent: next.accent,
       border: next.border,
       wallpaper: next.wallpaper,
       dotsText: next.dotsSample,
       dotsNote: next.credit,
+      identity: { ...s.identity, wm: skinWm[next.skin] },
       showWallPicker: false,
     }))
   }
@@ -766,32 +772,11 @@ export default function App() {
 
   if (state.phase === 'landing') {
     return (
-      <div className="landing">
-        <div className="landing-hero" style={{ backgroundImage: cssBgUrl(RICES.viegphunt.wallpaper) }}>
-          <div className="landing-card">
-            <p className="eyebrow">LARP Linux</p>
-            <h1>Fake Arch desktops for the timeline.</h1>
-            <p>
-              Pick Hyprland, GNOME, or KDE. One-click rice packs (visual only). Export a PNG.
-              You are not installing Arch. You are LARPing.
-            </p>
-            <div className="landing-actions">
-              <button className="primary" onClick={() => setState((s) => ({ ...s, phase: 'setup' }))}>
-                Start LARPing
-              </button>
-              <button className="primary ghost" onClick={() => quickLarp('viegphunt')}>
-                LARP ViegPhunt
-              </button>
-              <button className="primary ghost haku-btn" onClick={() => quickLarp('hakuspace')}>
-                LARP Hakuspace
-              </button>
-              <button className="primary ghost end4-btn" onClick={() => quickLarp('end4')}>
-                LARP end4-pC
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <LimineLanding
+        onSetup={() => setState((s) => ({ ...s, phase: 'setup' }))}
+        onBoot={(id) => bootRice(id, 'stage')}
+        onEdit={(id) => bootRice(id, 'setup')}
+      />
     )
   }
 
@@ -828,7 +813,28 @@ export default function App() {
             Desktop skin
             <select
               value={state.skin}
-              onChange={(e) => setState((s) => ({ ...s, skin: e.target.value as Skin }))}
+              onChange={(e) => {
+                const value = e.target.value
+                if (value !== 'hyprland' && value !== 'gnome' && value !== 'kde') return
+                setState((s) => {
+                  const current = riceById(s.rice)
+                  if (current.skin === value) {
+                    return { ...s, skin: value, identity: { ...s.identity, wm: skinWm[value] } }
+                  }
+                  const next = firstRiceForSkin(value)
+                  return {
+                    ...s,
+                    skin: value,
+                    rice: next.id,
+                    accent: next.accent,
+                    border: next.border,
+                    wallpaper: next.wallpaper,
+                    dotsText: next.dotsSample,
+                    dotsNote: next.credit,
+                    identity: { ...s.identity, wm: skinWm[value] },
+                  }
+                })
+              }}
             >
               <option value="hyprland">Hyprland</option>
               <option value="gnome">GNOME</option>
@@ -837,12 +843,21 @@ export default function App() {
           </label>
           <label>
             Rice pack
-            <select value={state.rice} onChange={(e) => applyRice(e.target.value as RiceId)}>
-              <option value="default">Default</option>
-              <option value="viegphunt">ViegPhunt Arch-Hyprland</option>
-              <option value="mocha-alt">Mocha Alt (LARP pack)</option>
-              <option value="hakuspace">Hakuspace</option>
-              <option value="end4">end4-pC (Material 3)</option>
+            <select
+              value={state.rice}
+              onChange={(e) => {
+                if (isRiceId(e.target.value)) applyRice(e.target.value)
+              }}
+            >
+              {SKIN_ORDER.map((skin) => (
+                <optgroup key={skin} label={SKIN_LABEL[skin]}>
+                  {ricesForSkin(skin).map((rice) => (
+                    <option key={rice.id} value={rice.id}>
+                      {rice.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </label>
           <label>
@@ -940,9 +955,9 @@ export default function App() {
 
   const showChrome = !exporting && !state.recordMode && state.showExportBar !== false
   const showPeek = !exporting && !state.recordMode && state.showExportBar === false
-  const termPos = positionsRef.current.terminal ?? defaultPos('terminal', isEnd4)
-  const browserPos = positionsRef.current.browser ?? defaultPos('browser', isEnd4)
-  const filesPos = positionsRef.current.files ?? defaultPos('files', isEnd4)
+  const termPos = positionsRef.current.terminal ?? defaultPos('terminal', windowLayout)
+  const browserPos = positionsRef.current.browser ?? defaultPos('browser', windowLayout)
+  const filesPos = positionsRef.current.files ?? defaultPos('files', windowLayout)
 
   return (
     <div className="shell">
@@ -1009,6 +1024,67 @@ export default function App() {
             }}
             onToggleApp={toggleApp}
           />
+        ) : isHyprBar && pack.hyprVariant ? (
+          <HyprBar
+            variant={pack.hyprVariant}
+            workspace={workspace}
+            goWorkspace={goWorkspace}
+            clock={clock}
+            wifiOn={wifiOn}
+            volMuted={volMuted}
+            volLevel={volLevel}
+            onLauncher={() => {
+              setShowKeybinds(false)
+              setShowLauncher(true)
+            }}
+            onClock={openClock}
+            onToggleWifi={toggleWifi}
+            onToggleVol={toggleVol}
+            onPower={() => {
+              pushToast('wlogout · still larping')
+              setShowLauncher(true)
+            }}
+          />
+        ) : isGnome ? (
+          <GnomeChrome
+            workspace={workspace}
+            goWorkspace={goWorkspace}
+            clock={clock}
+            displayName={state.identity.displayName}
+            focusedApp={focusedApp}
+            openApps={state.openApps}
+            wifiOn={wifiOn}
+            volMuted={volMuted}
+            onLauncher={() => {
+              setShowKeybinds(false)
+              setShowLauncher(true)
+            }}
+            onClock={openClock}
+            onToggleWifi={toggleWifi}
+            onToggleVol={toggleVol}
+            onToggleApp={toggleApp}
+            onUser={() => pushToast(`Hi, ${state.identity.displayName}`)}
+          />
+        ) : isKde ? (
+          <KdeChrome
+            workspace={workspace}
+            goWorkspace={goWorkspace}
+            clock={clock}
+            displayName={state.identity.displayName}
+            openApps={state.openApps}
+            wifiOn={wifiOn}
+            volMuted={volMuted}
+            btOn={btOn}
+            onLauncher={() => {
+              setShowKeybinds(false)
+              setShowLauncher(true)
+            }}
+            onClock={openClock}
+            onToggleWifi={toggleWifi}
+            onToggleVol={toggleVol}
+            onToggleBt={toggleBt}
+            onToggleApp={toggleApp}
+          />
         ) : isEnd4 ? (
           <End4Chrome
             workspace={workspace}
@@ -1070,7 +1146,7 @@ export default function App() {
           </div>
         )}
 
-        {!isRiceDesktop && (
+        {showDesktopIcons && (
 
           <div className="icons">
             <button type="button" onClick={() => toggleApp('terminal')}>
@@ -1089,11 +1165,7 @@ export default function App() {
         <div className={`windows${wsFlash ? ' windows-swap' : ''}`}>
           {state.openApps.includes('terminal') && (
             <FakeWindow
-              title={
-                isHaku
-                  ? `kitty — ${state.identity.username}@${state.identity.hostname}:~`
-                  : `${state.identity.username}@${state.identity.hostname}: ~`
-              }
+              title={`${pack.terminal} — ${state.identity.username}@${state.identity.hostname}:~`}
               onClose={() => toggleApp('terminal')}
               x={termPos.x}
               y={termPos.y}

@@ -1,0 +1,219 @@
+.limine {
+  position: relative;
+  min-height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: #e8eef5;
+  background-color: #041018;
+  background-image:
+    radial-gradient(ellipse 90% 70% at 78% 8%, rgba(23, 147, 209, 0.55), transparent 52%),
+    radial-gradient(ellipse 70% 50% at 12% 88%, rgba(12, 92, 148, 0.32), transparent 58%),
+    radial-gradient(ellipse 40% 28% at 50% 48%, rgba(23, 147, 209, 0.12), transparent 70%),
+    linear-gradient(165deg, #082033 0%, #0a1826 38%, #061018 72%, #03070c 100%);
+  font-family: var(--nf), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.limine-grain,
+.limine-vignette,
+.limine-mark {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.limine-grain {
+  opacity: 0.16;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+.limine-vignette {
+  background:
+    linear-gradient(90deg, rgba(5, 8, 13, 0.55), transparent 14%, transparent 86%, rgba(5, 8, 13, 0.55)),
+    linear-gradient(180deg, rgba(5, 8, 13, 0.35), transparent 18%, transparent 82%, rgba(5, 8, 13, 0.55));
+}
+
+.limine-mark {
+  width: min(58vw, 560px);
+  height: auto;
+  inset: auto;
+  right: -2vw;
+  bottom: -4vh;
+  fill: rgba(23, 147, 209, 0.16);
+}
+
+.limine-term {
+  position: relative;
+  z-index: 1;
+  width: min(720px, calc(100vw - 1.5rem));
+  max-height: calc(100dvh - 1.5rem);
+  margin: 0.75rem;
+  padding: clamp(0.9rem, 2.4vw, 1.6rem) clamp(0.9rem, 3vw, 1.8rem);
+  display: flex;
+  flex-direction: column;
+  background: rgba(4, 10, 16, 0.62);
+  box-shadow:
+    inset 0 0 0 1px rgba(23, 147, 209, 0.22),
+    0 24px 80px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+  border-radius: 10px;
+}
+
+.limine-brand {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  flex-shrink: 0;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(23, 147, 209, 0.22);
+  padding-bottom: 0.65rem;
+}
+
+.limine-product {
+  margin: 0;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: #1793d1;
+}
+
+.limine-bootloader {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #7f93a8;
+}
+
+.limine-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  align-content: start;
+  overflow: auto;
+  min-height: 0;
+}
+
+.limine-entry {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #d5deea;
+  padding: 0.55rem 0.85rem;
+  min-height: 2.5rem;
+  font: inherit;
+  font-size: clamp(0.92rem, 2.4vw, 1.05rem);
+}
+
+.limine-entry:hover,
+.limine-entry.selected {
+  background: #1793d1;
+  color: #061018;
+}
+
+.limine-entry.firmware {
+  margin-top: 0.65rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 0.75rem;
+}
+
+.limine-entry.firmware.selected {
+  background: #cdd6f4;
+}
+
+.limine-label {
+  font-weight: 650;
+}
+
+.limine-hint {
+  opacity: 0.55;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.limine-entry.selected .limine-hint,
+.limine-entry:hover .limine-hint {
+  opacity: 0.75;
+}
+
+.limine-help {
+  flex-shrink: 0;
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #8ea0b5;
+  font-size: clamp(0.72rem, 2vw, 0.85rem);
+}
+
+.limine-help p {
+  margin: 0.2rem 0;
+}
+
+.limine-help kbd {
+  font: inherit;
+  color: #e8eef5;
+}
+
+.limine-timeout {
+  margin-top: 0.55rem !important;
+  color: #6d7f93;
+}
+
+.limine-firmware {
+  margin-top: 0.7rem;
+  border: 1px solid rgba(23, 147, 209, 0.35);
+  background: transparent;
+  color: #9eb3c7;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+.limine-firmware:hover {
+  background: #1793d1;
+  color: #061018;
+  border-color: #1793d1;
+}
+
+@media (max-width: 700px) {
+  .limine-mark {
+    width: min(56vw, 240px);
+    right: -4vw;
+    bottom: 4vh;
+    opacity: 0.7;
+  }
+
+  .limine-brand {
+    flex-wrap: wrap;
+  }
+
+  .limine-entry {
+    flex-wrap: wrap;
+    gap: 0.15rem 0.75rem;
+    min-height: 2.75rem;
+  }
+
+  .limine-hint {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .limine-term {
+    width: 100%;
+    max-height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+  }
+}

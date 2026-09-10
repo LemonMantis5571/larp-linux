@@ -14,7 +14,7 @@ Client-side web studio for fake Linux desktops. Target use: take a convincing sc
 ## Screens
 
 ### Landing
-Hero with a pretty fake desktop + honest copy + CTA.
+Limine-style boot menu over an Arch gradient. Arrow keys select a rice, Enter boots the desktop, `e` opens setup. Honest footer: you are not installing Arch.
 
 ### Setup (sidebar or sheet)
 - Skin: Hyprland | GNOME | KDE Plasma

@@ -1,0 +1,213 @@
+/* Whole-app layout. Desktop chrome stays; small viewports stack and clip. */
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.landing,
+.setup-shell,
+.shell,
+.stage {
+  width: 100%;
+  max-width: 100vw;
+}
+
+.stage,
+.setup-shell,
+.landing,
+.limine {
+  min-height: 100dvh;
+}
+
+.stage {
+  height: 100dvh;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+.setup-grid input,
+.setup-grid select,
+.setup-grid textarea {
+  width: 100%;
+  max-width: 100%;
+}
+
+.export-bar {
+  max-width: calc(100vw - 1.5rem);
+}
+
+@media (max-width: 980px) {
+  .setup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rice-end4 .end4-sidebar { display: none; }
+  .rice-end4 .windows { left: 18px; }
+
+  .rice-hakuspace .haku-musics,
+  .rice-hakuspace .haku-monitor,
+  .rice-hakuspace .haku-trays { display: none; }
+
+  .rice-viegphunt .wb.tray,
+  .rice-viegphunt .wb.bt { display: none; }
+
+  .hyprbar-mod { display: none; }
+  .kde-who { display: none; }
+  .end4-media-text { display: none; }
+}
+
+@media (max-width: 760px) {
+  .setup-shell { padding: 0.6rem; }
+  .setup > header { padding: 1rem 1rem 0; }
+  .setup-grid { padding: 0 1rem; gap: 0.75rem; }
+  .setup-actions {
+    position: static;
+    padding: 0.85rem 1rem;
+    flex-wrap: wrap;
+  }
+  .setup-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .neo-row { flex-direction: column; }
+  .arch-ascii { display: none; }
+
+  .panel {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .panel-left,
+  .panel-right {
+    flex-wrap: wrap;
+  }
+  .panel-right span:first-child { display: none; }
+
+  .rice-hakuspace .haku-bar {
+    flex-wrap: wrap;
+    position: absolute;
+    height: auto;
+  }
+  .rice-hakuspace .haku-left-stack,
+  .rice-hakuspace .haku-right-stack {
+    flex-wrap: wrap;
+  }
+  .rice-hakuspace .haku-adjusters .haku-mod:nth-child(1),
+  .rice-hakuspace .haku-tools .haku-mod.nf-bolt,
+  .rice-hakuspace .haku-tools .haku-mod.nf-rec { display: none; }
+
+  .rice-end4 .end4-bar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 0.45rem 0.7rem;
+  }
+  .rice-end4 .end4-right { flex-wrap: wrap; justify-content: flex-end; }
+
+  .gnome-appmenu,
+  .gnome-ws { display: none; }
+
+  .kde-task { padding: 0.3rem 0.5rem; }
+
+  .windows {
+    overflow: auto;
+  }
+  .window {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: calc(100% - 0.8rem) !important;
+    max-width: none;
+    margin: 0.4rem auto;
+    min-height: 0;
+  }
+  .rice-viegphunt .window.ghostty,
+  .rice-hakuspace .window.kitty {
+    width: calc(100% - 0.8rem) !important;
+    min-height: 0;
+  }
+  .icons { display: none; }
+  .gnome-dash { display: none; }
+
+  .export-bar,
+  .export-peek {
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0.5rem;
+    max-height: 28dvh;
+    overflow: auto;
+  }
+  .export-bar.rice-kde,
+  .export-peek.rice-kde {
+    bottom: 3.4rem;
+  }
+  .export-bar button {
+    padding: 0.4rem 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  .toast-stack {
+    top: auto;
+    bottom: 7rem;
+    right: 0.6rem;
+    left: 0.6rem;
+  }
+
+  .wall-picker,
+  .launcher-overlay,
+  .keybind-overlay,
+  .lyrics-overlay {
+    padding: 0.6rem;
+    align-items: end;
+  }
+  .wall-picker-panel,
+  .launcher-panel,
+  .keybind-panel {
+    width: min(100%, 94vw);
+    max-height: 78dvh;
+  }
+  .lyrics-card {
+    width: min(100%, 94vw);
+    height: min(560px, 82dvh);
+  }
+  .wall-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.35rem; }
+  .setup-tag { display: none; }
+  .hyprbar {
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    flex-wrap: wrap;
+  }
+  .gnome-dash-btn { width: 36px; height: 36px; }
+  .rice-end4 .end4-media { display: none; }
+  .keybind-list li {
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .shell-out { max-height: 160px; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .limine-help { display: none; }
+  .limine-brand { margin-bottom: 0.5rem; }
+  .setup-shell { padding: 0.4rem; }
+  .export-bar { max-height: 22dvh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -39,8 +39,26 @@ export function switchWorkspace(
 
 type WindowPosLike = { x: number; y: number }
 
-export function defaultPos(app: AppId, end4: boolean): WindowPosLike {
-  if (app === 'terminal') return { x: end4 ? 320 : 80, y: end4 ? 100 : 90 }
-  if (app === 'browser') return { x: end4 ? 560 : 320, y: end4 ? 140 : 120 }
-  return { x: end4 ? 720 : 520, y: end4 ? 180 : 160 }
+export type WindowLayout = 'end4' | 'gnome' | 'kde' | 'default'
+
+export function defaultPos(app: AppId, layout: WindowLayout | boolean): WindowPosLike {
+  const kind: WindowLayout = layout === true ? 'end4' : layout === false ? 'default' : layout
+  if (kind === 'end4') {
+    if (app === 'terminal') return { x: 320, y: 100 }
+    if (app === 'browser') return { x: 560, y: 140 }
+    return { x: 720, y: 180 }
+  }
+  if (kind === 'gnome') {
+    if (app === 'terminal') return { x: 72, y: 64 }
+    if (app === 'browser') return { x: 300, y: 96 }
+    return { x: 500, y: 132 }
+  }
+  if (kind === 'kde') {
+    if (app === 'terminal') return { x: 72, y: 40 }
+    if (app === 'browser') return { x: 300, y: 76 }
+    return { x: 500, y: 112 }
+  }
+  if (app === 'terminal') return { x: 80, y: 90 }
+  if (app === 'browser') return { x: 320, y: 120 }
+  return { x: 520, y: 160 }
 }

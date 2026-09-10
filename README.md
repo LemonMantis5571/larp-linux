@@ -24,8 +24,8 @@ npm install
 npm run dev
 ```
 
-Then open the printed URL, hit **LARP ViegPhunt** (or any pack) on the landing
-page, and you are on a desktop.
+Then open the printed URL. The first screen is a Limine-style boot menu.
+Arrow keys pick a rice, Enter boots the desktop, `e` opens setup.
 
 | Script | Does |
 |--------|------|
@@ -53,11 +53,24 @@ attribution and licences are in [Attributions](#attributions).
 
 | Pack | Ported from | Bar / chrome |
 |------|-------------|--------------|
-| `default` | — | Generic Hyprland / GNOME / KDE LARP |
+| `default` | — | Generic Hyprland LARP |
 | `viegphunt` | [ViegPhunt/Dotfiles](https://github.com/ViegPhunt/Dotfiles) | Catppuccin Mocha waybar: power + workspaces, then tray, bluetooth, network, battery, volume, clock |
 | `mocha-alt` | same as above | Same waybar with a blue accent instead of pink |
 | `hakuspace` | [hakuimaku/hakuspace](https://github.com/hakuimaku/hakuspace) | Island waybar: utilities, workspaces, cava + mpris, clock, monitor drawer, adjusters, tray, tools, plus the dockbar |
 | `end4` | [pctrade/end4-pC](https://github.com/pctrade/end4-pC) | Material 3 top bar with media chip and a lyrics overlay |
+| `hyde` | [HyDE-Project/HyDE](https://github.com/HyDE-Project/HyDE) | Rounded Hypr bar, Arch mark, cyan accent. Colors only |
+| `tokyo-hypr` | [enkia/tokyo-night-vscode-theme](https://github.com/enkia/tokyo-night-vscode-theme) | Tokyo Night Hypr bar. Palette only |
+| `nord-hypr` | [nordtheme/nord](https://github.com/nordtheme/nord) | Nord Hypr bar. Palette only |
+| `gnome-adwaita` | GNOME Adwaita Dark | Top bar, centered clock, dash-to-dock |
+| `gnome-catppuccin` | [catppuccin/gtk](https://github.com/catppuccin/gtk) | Same GNOME chrome, Mocha mauve |
+| `gnome-tokyonight` | [Fausto-Korpsvart/Tokyo-Night-GTK-Theme](https://github.com/Fausto-Korpsvart/Tokyo-Night-GTK-Theme) | GNOME chrome, Tokyo Night |
+| `gnome-nord` | [nordtheme/nord](https://github.com/nordtheme/nord) | GNOME chrome, frost accent |
+| `gnome-graphite` | [vinceliuice/Graphite-gtk-theme](https://github.com/vinceliuice/Graphite-gtk-theme) | GNOME chrome, Graphite |
+| `kde-breeze` | KDE Breeze Dark | Bottom Plasma panel, kickoff, tasks, tray |
+| `kde-sweet` | [EliverLara/Sweet](https://github.com/EliverLara/Sweet) | Plasma chrome, candy pink |
+| `kde-nordic` | [nordtheme/nord](https://github.com/nordtheme/nord) | Plasma chrome, Nord |
+| `kde-catppuccin` | [catppuccin/kde](https://github.com/catppuccin/kde) | Plasma chrome, Mocha |
+| `kde-layan` | [vinceliuice/Layan-kde](https://github.com/vinceliuice/Layan-kde) | Plasma chrome, Layan purple |
 
 ## Keybinds
 
@@ -106,9 +119,13 @@ modules and the end4 media chip are all driven by the same fake player
 ```
 src/
   App.tsx           phases (landing → setup → stage), keybinds, export, demo
+  LimineLanding.tsx Limine-style boot menu
   ViegWaybar.tsx    ViegPhunt waybar
   HakuChrome.tsx    hakuspace island bar + dockbar
   End4Chrome.tsx    end4 Material 3 bar
+  GnomeChrome.tsx   GNOME top bar + dash
+  KdeChrome.tsx     Plasma panel
+  HyprBar.tsx       HyDE / Tokyo Night / Nord waybar
   CavaBars.tsx      fake cava visualiser
   LyricsPanel.tsx   lyrics overlay
   music.ts          fake MPRIS playlist + cava level maths
@@ -156,6 +173,15 @@ published their dotfiles. Please go star their repos.
 | [hakuimaku/hakuspace](https://github.com/hakuimaku/hakuspace) | [@hakuimaku](https://github.com/hakuimaku) | MIT | `waybar/island/` and `dockbar/` styles, the `module/*` configs, and `cava/config_waybar` |
 | [pctrade/end4-pC](https://github.com/pctrade/end4-pC) | [@pctrade](https://github.com/pctrade) | GPL-3.0 | Visual look of the Quickshell `Media.qml` and `Lyrics.qml` panels |
 | [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland) | [@end-4](https://github.com/end-4) | GPL-3.0 | The original the `end4` pack descends from, via pctrade's fork |
+| [HyDE-Project/HyDE](https://github.com/HyDE-Project/HyDE) | [@prasanthrangan](https://github.com/prasanthrangan) | GPL-3.0 | Accent / bar shape for the `hyde` pack. Not a CSS port |
+| [enkia/tokyo-night-vscode-theme](https://github.com/enkia/tokyo-night-vscode-theme) | [@enkia](https://github.com/enkia) | MIT | Tokyo Night palette tokens |
+| [nordtheme/nord](https://github.com/nordtheme/nord) | [@arcticicestudio](https://github.com/arcticicestudio) | MIT | Nord palette tokens |
+| [catppuccin/gtk](https://github.com/catppuccin/gtk) | [Catppuccin](https://github.com/catppuccin) | MIT | Mocha accent for the GNOME pack |
+| [catppuccin/kde](https://github.com/catppuccin/kde) | [Catppuccin](https://github.com/catppuccin) | MIT | Mocha accent for the Plasma pack |
+| [Fausto-Korpsvart/Tokyo-Night-GTK-Theme](https://github.com/Fausto-Korpsvart/Tokyo-Night-GTK-Theme) | [@Fausto-Korpsvart](https://github.com/Fausto-Korpsvart) | GPL-3.0 | Color cue for GNOME Tokyo Night |
+| [vinceliuice/Graphite-gtk-theme](https://github.com/vinceliuice/Graphite-gtk-theme) | [@vinceliuice](https://github.com/vinceliuice) | GPL-3.0 | Color cue for GNOME Graphite |
+| [EliverLara/Sweet](https://github.com/EliverLara/Sweet) | [@EliverLara](https://github.com/EliverLara) | GPL-3.0 | Color cue for Plasma Sweet |
+| [vinceliuice/Layan-kde](https://github.com/vinceliuice/Layan-kde) | [@vinceliuice](https://github.com/vinceliuice) | GPL-3.0 | Color cue for Plasma Layan |
 
 Ported CSS lives in [`src/vendor/`](src/vendor) and is loaded as plain
 stylesheets. It is never run by Waybar or Quickshell.
