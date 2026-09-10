@@ -10,7 +10,6 @@ installed. No config ever runs. You are LARPing.
 - [Rice packs](#rice-packs)
 - [Keybinds](#keybinds)
 - [Exporting a screenshot](#exporting-a-screenshot)
-- [Recording a LARP](#recording-a-larp)
 - [Project layout](#project-layout)
 - [How close are the ports](#how-close-are-the-ports)
 - [Attributions](#attributions)
@@ -85,21 +84,13 @@ launcher.
 
 ## Exporting a screenshot
 
-Three presets, rendered at 2× and centre-cropped. **story** 1080×1920,
-**square** 1080×1080, **wide** 1920×1080.
+Three full-desktop sizes, captured at 2×. **story** 1080×1920, **square**
+1080×1080, **wide** 1920×1080. The stage is laid out at that size and the PNG
+is the whole frame.
 
 The export bar and peek button are never in the shot. They live outside the
 captured node, they unmount before snapshot, and `data-larp-chrome` filters
 them too. Hide the bar with **H** and still export with **E**.
-
-## Recording a LARP
-
-1. Pick a pack and enter the desktop.
-2. Press **R** so app chrome disappears.
-3. Hit **Demo** if you want a rehearsal, then record with OBS or whatever.
-
-Vieg toasts volume and bluetooth. Haku cava/mpris and the end4 media chip share
-the same fake player in `src/music.ts`. The dock opens windows.
 
 ## Project layout
 
@@ -203,13 +194,13 @@ default. That is the LARP.
 
 ## Licensing
 
-No `LICENSE` file, so all rights reserved by default.
+[GPL-3.0-or-later](LICENSE). Original LARP Linux code and the combined app
+ship under that. Sweet, Papirus icons, the Kitty mark, and the bundled end4
+wallpaper are already GPL-3.0, so this is the licence that actually fits the
+tree.
 
-The `end4` and `gnome-sweet` packs derive from GPL-3.0 work. `end4` also
-bundles a GPL wallpaper. If you ship this, that copyleft is in the box.
+MIT ports (Vieg, hakuspace, catppuccin/kde) keep their copyright. Amethyst's
+generated gnome-shell.css is LGPL-2.1. Socrates did not declare a licence.
 
 Two wallpaper sources have no licence. The bundled BLACKPINK still is someone
-else's art.
-
-MIT dots (Vieg, hakuspace, catppuccin/kde) want their copyright notices to
-travel with the ported CSS.
+else's art. Those files are not GPL just because they sit in this repo.

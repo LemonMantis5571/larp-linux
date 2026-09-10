@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { toPng } from 'html-to-image'
 import { parseDots } from './dots'
 import { isRiceId, RICES, riceById, RICE_LIST, SKIN_OPTIONS, wmForSkin, type ChromeKind, type RiceId } from './rices'
@@ -135,6 +136,7 @@ export default function App() {
   const demoTimers = useRef<number[]>([])
   const lastPresetRef = useRef<ExportPreset>('story')
   const [exporting, setExporting] = useState(false)
+  const [exportFrame, setExportFrame] = useState<{ w: number; h: number } | null>(null)
   const [state, setState] = useState<AppState>({
     phase: 'landing',
     skin: 'hyprland',
@@ -850,46 +852,34 @@ export default function App() {
   }
 
   async function exportPng(preset: ExportPreset) {
-    const node = stageRef.current
-    if (!node) return
+    if (!stageRef.current) return
     lastPresetRef.current = preset
-    setExporting(true)
+    const size =
+      preset === 'story' ? { w: 1080, h: 1920 } : preset === 'square' ? { w: 1080, h: 1080 } : { w: 1920, h: 1080 }
+    flushSync(() => {
+      setExporting(true)
+      setExportFrame(size)
+    })
     try {
-      const size =
-        preset === 'story' ? { w: 1080, h: 1920 } : preset === 'square' ? { w: 1080, h: 1080 } : { w: 1920, h: 1080 }
-      // let React paint with the chrome unmounted before we snapshot
       await new Promise<void>((res) => {
         requestAnimationFrame(() => requestAnimationFrame(() => res()))
       })
-      const dataUrl = await toPng(node, {
+      const frame = stageRef.current
+      if (!frame) return
+      const dataUrl = await toPng(frame, {
         cacheBust: true,
         pixelRatio: 2,
-        width: node.clientWidth,
-        height: node.clientHeight,
+        width: size.w,
+        height: size.h,
         filter: (n) => !(n instanceof HTMLElement && n.dataset.larpChrome !== undefined),
       })
-      const img = new Image()
-      await new Promise<void>((res, rej) => {
-        img.onload = () => res()
-        img.onerror = () => rej(new Error('img'))
-        img.src = dataUrl
-      })
-      const canvas = document.createElement('canvas')
-      canvas.width = size.w
-      canvas.height = size.h
-      const ctx = canvas.getContext('2d')!
-      ctx.fillStyle = '#000'
-      ctx.fillRect(0, 0, size.w, size.h)
-      const scale = Math.max(size.w / img.width, size.h / img.height)
-      const dw = img.width * scale
-      const dh = img.height * scale
-      ctx.drawImage(img, (size.w - dw) / 2, (size.h - dh) / 2, dw, dh)
       const a = document.createElement('a')
-      a.href = canvas.toDataURL('image/png')
+      a.href = dataUrl
       a.download = `larp-linux-${preset}.png`
       a.click()
     } finally {
       setExporting(false)
+      setExportFrame(null)
     }
   }
 
@@ -1069,16 +1059,26 @@ export default function App() {
   const filesPos = positionsRef.current.files ?? defaultPos('files', windowLayout)
 
   return (
-    <div className="shell">
+    <div className={`shell${exportFrame ? ' is-exporting' : ''}`}>
       <div
         ref={stageRef}
-        className={`stage skin-${state.skin}${riceClassName}${wsFlash ? ' ws-fade' : ''}`}
+        className={`stage skin-${state.skin}${riceClassName}${wsFlash ? ' ws-fade' : ''}${exportFrame ? ' is-exporting' : ''}`}
         tabIndex={0}
         style={
           {
             '--accent': state.accent,
             '--border': state.border,
             backgroundImage: cssBgUrl(state.wallpaper),
+            ...(exportFrame
+              ? {
+                  width: exportFrame.w,
+                  height: exportFrame.h,
+                  maxWidth: 'none',
+                  maxHeight: 'none',
+                  minWidth: exportFrame.w,
+                  minHeight: exportFrame.h,
+                }
+              : {}),
           } as CSSProperties
         }
         onMouseDown={() => {
