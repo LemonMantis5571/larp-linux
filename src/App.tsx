@@ -2,20 +2,11 @@ import type { CSSProperties } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toPng } from 'html-to-image'
 import { parseDots } from './dots'
-import {
-  firstRiceForSkin,
-  isRiceId,
-  RICES,
-  riceById,
-  ricesForSkin,
-  SKIN_LABEL,
-  SKIN_ORDER,
-  type RiceId,
-} from './rices'
+import { isRiceId, RICES, riceById, RICE_LIST, SKIN_OPTIONS, wmForSkin, type ChromeKind, type RiceId } from './rices'
 import type { AppId, AppState, ExportPreset, Identity, Skin, Toast, WorkspaceId } from './types'
 import { WALLPAPERS, cycleWallpaper } from './wallpapers'
 import { cssBgUrl, hotlinkLikelyBlocked, normalizeWallUrl, probeImage } from './wallUrl'
-import { defaultPos, initialWorkspaces, switchWorkspace, WORKSPACE_IDS } from './workspaces'
+import { defaultPos, initialWorkspaces, switchWorkspace } from './workspaces'
 import { isTypingTarget } from './keybinds'
 import { runFakeCommand, type ShellContext } from './fakeShell'
 import { Launcher, type LauncherAction } from './Launcher'
@@ -27,18 +18,28 @@ import { ViegWaybar } from './ViegWaybar'
 import { HakuChrome } from './HakuChrome'
 import { End4Chrome } from './End4Chrome'
 import { LimineLanding } from './LimineLanding'
+import { AppIcon } from './AppIcon'
+import { appLabel } from './appIcons'
+import { Wlogout, type WlogoutAction } from './Wlogout'
+import { type PowerProfile } from './HakuChrome'
 import { GnomeChrome } from './GnomeChrome'
 import { KdeChrome } from './KdeChrome'
-import { HyprBar } from './HyprBar'
+import { SocratesBar, type AsusProfile } from './SocratesBar'
 import './App.css'
-import './de-chrome.css'
-import './responsive.css'
 import './vendor/vieg-waybar.css'
 import './vendor/haku-island.css'
 import './vendor/icons.css'
 import './vendor/end4-media.css'
+import './vendor/amethyst-gnome.css'
+import './vendor/sweet-gnome.css'
+import './vendor/socrates-waybar.css'
+import './vendor/catppuccin-plasma.css'
+import './responsive.css'
 
-const DEFAULT_WALL = RICES.default.wallpaper
+const DEFAULT_WALL = RICES.viegphunt.wallpaper
+const DESKTOP_APPS: AppId[] = ['terminal', 'browser', 'files']
+const POWER_PROFILES: PowerProfile[] = ['performance', 'balanced', 'power-saver']
+const ASUS_PROFILES: AsusProfile[] = ['Integrated', 'Hybrid', 'Dedicated']
 
 const defaultIdentity: Identity = {
   displayName: 'larper',
@@ -49,20 +50,13 @@ const defaultIdentity: Identity = {
   wm: 'Hyprland',
 }
 
-const skinWm: Record<Skin, string> = {
-  hyprland: 'Hyprland',
-  gnome: 'GNOME Shell',
-  kde: 'KWin (Plasma)',
-}
-
-type ClockStyle = 'plain' | 'vieg' | 'haku' | 'end4' | 'gnome' | 'kde'
-
-function clockNow(style: ClockStyle) {
+function clockNow(style: ChromeKind, compact = false) {
   const d = new Date()
   const hh = String(d.getHours()).padStart(2, '0')
   const mi = String(d.getMinutes()).padStart(2, '0')
   const ss = String(d.getSeconds()).padStart(2, '0')
   if (style === 'haku') {
+    if (compact) return `${hh}:${mi}:${ss}`
     const months = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December',
@@ -70,24 +64,28 @@ function clockNow(style: ClockStyle) {
     return `${hh}:${mi}:${ss}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
   }
   if (style === 'end4') {
+    if (compact) return `${hh}:${mi}`
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const dd = String(d.getDate()).padStart(2, '0')
     const mm = String(d.getMonth() + 1).padStart(2, '0')
     return `${days[d.getDay()]}, ${dd}/${mm} • ${hh}:${mi}`
   }
-  if (style === 'vieg') {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    const dd = String(d.getDate()).padStart(2, '0')
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    const yyyy = d.getFullYear()
-    return `${days[d.getDay()]} ${dd}/${mm}/${yyyy} ~ ${hh}:${mi}`
-  }
   if (style === 'gnome') {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    return `${days[d.getDay()]} ${hh}:${mi}`
+    return `${days[d.getDay()]}  ${hh}:${mi}`
   }
   if (style === 'kde') return `${hh}:${mi}`
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  if (style === 'socrates') {
+    const h12 = d.getHours() % 12 || 12
+    const ampm = d.getHours() < 12 ? 'AM' : 'PM'
+    return `${String(h12).padStart(2, '0')}:${mi} ${ampm}`
+  }
+  if (compact) return `${hh}:${mi}`
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const yyyy = d.getFullYear()
+  return `${days[d.getDay()]} ${dd}/${mm}/${yyyy} ~ ${hh}:${mi}`
 }
 
 function promptTime() {
@@ -124,6 +122,13 @@ const ARCH_ASCII = `                   -\`
 
 let toastSeq = 1
 
+function formatRec(ms: number) {
+  const s = Math.max(0, Math.floor(ms / 1000))
+  const mm = String(Math.floor(s / 60)).padStart(2, '0')
+  const ss = String(s % 60).padStart(2, '0')
+  return `${mm}:${ss}`
+}
+
 export default function App() {
   const stageRef = useRef<HTMLDivElement>(null)
   const positionsRef = useRef<Partial<Record<AppId, { x: number; y: number }>>>({})
@@ -133,7 +138,7 @@ export default function App() {
   const [state, setState] = useState<AppState>({
     phase: 'landing',
     skin: 'hyprland',
-    rice: 'default',
+    rice: 'viegphunt',
     identity: defaultIdentity,
     wallpaper: DEFAULT_WALL,
     accent: '#89b4fa',
@@ -147,10 +152,14 @@ export default function App() {
     workspaces: initialWorkspaces(),
     recordMode: false,
   })
-  const [clock, setClock] = useState(() => clockNow('plain'))
+  const [clock, setClock] = useState(() => clockNow('vieg'))
   const [ptime, setPtime] = useState(promptTime)
   const [showLauncher, setShowLauncher] = useState(false)
   const [showKeybinds, setShowKeybinds] = useState(false)
+  const [showWlogout, setShowWlogout] = useState(false)
+  const [sleeping, setSleeping] = useState(false)
+  const [powerProfile, setPowerProfile] = useState<PowerProfile>('balanced')
+  const [recStartedAt, setRecStartedAt] = useState<number | null>(null)
   const [toasts, setToasts] = useState<Toast[]>([])
   const [focusedApp, setFocusedApp] = useState<AppId | null>('terminal')
   const [termLines, setTermLines] = useState<string[]>([
@@ -162,12 +171,16 @@ export default function App() {
   const [volLevel] = useState(42)
   const [wifiOn, setWifiOn] = useState(true)
   const [brightness, setBrightness] = useState(40)
+  const [micMuted, setMicMuted] = useState(false)
+  const [vpnOn, setVpnOn] = useState(true)
+  const [asusProfile, setAsusProfile] = useState<AsusProfile>('Hybrid')
   const [musicPlaying, setMusicPlaying] = useState(false)
   const [trackIndex, setTrackIndex] = useState(0)
   const [lyricLine, setLyricLine] = useState(0)
   const [showLyrics, setShowLyrics] = useState(false)
   const [cavaLevels, setCavaLevels] = useState(() => Array.from({ length: CAVA_BARS }, () => 0.18))
   const [hakuMonitorOpen, setHakuMonitorOpen] = useState(false)
+  const [compactChrome, setCompactChrome] = useState(() => window.matchMedia('(max-width: 760px)').matches)
   const [weatherTemp, setWeatherTemp] = useState(22)
   const [demoRunning, setDemoRunning] = useState(false)
   const [wsFlash, setWsFlash] = useState(false)
@@ -177,27 +190,27 @@ export default function App() {
   const isViegLike = pack.chrome === 'vieg'
   const isHaku = pack.chrome === 'haku'
   const isEnd4 = pack.chrome === 'end4'
-  const isHyprBar = pack.chrome === 'hypr'
   const isGnome = pack.chrome === 'gnome'
   const isKde = pack.chrome === 'kde'
-  const showDesktopIcons = pack.chrome === 'plain' || pack.chrome === 'kde'
+  const isSocrates = pack.chrome === 'socrates'
+  const showDesktopIcons = isViegLike || isGnome || isKde || isSocrates
   const hasWallPicker = pack.walls.length > 1
   const wallList = pack.walls.length ? pack.walls : WALLPAPERS.map((w) => w.url)
-  const clockStyle: ClockStyle = isHaku
-    ? 'haku'
-    : isEnd4
-      ? 'end4'
-      : isViegLike
-        ? 'vieg'
-        : isGnome
-          ? 'gnome'
-          : isKde
-            ? 'kde'
-            : 'plain'
+  const clockStyle: ChromeKind = pack.chrome
   const useGhostty = isViegLike
   const workspace = (state.workspace ?? 1) as WorkspaceId
   const riceClassName = pack.className ? ` ${pack.className}` : ''
-  const windowLayout = isEnd4 ? 'end4' : isGnome ? 'gnome' : isKde ? 'kde' : 'default'
+  const windowLayout = isEnd4
+    ? 'end4'
+    : isGnome
+      ? 'gnome'
+      : isKde
+        ? 'kde'
+        : isSocrates
+          ? 'socrates'
+          : 'hypr'
+  const recOn = recStartedAt !== null
+  const recLabel = formatRec(recStartedAt === null ? 0 : Date.now() - recStartedAt)
 
   const pushToast = useCallback((message: string) => {
     const id = toastSeq++
@@ -214,20 +227,21 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    const t = setInterval(() => {
-      setClock(clockNow(clockStyle))
-      setPtime(promptTime())
-    }, 1000)
-    setClock(clockNow(clockStyle))
-    return () => clearInterval(t)
-  }, [clockStyle])
+    const mq = window.matchMedia('(max-width: 760px)')
+    const sync = () => setCompactChrome(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
   useEffect(() => {
-    setState((s) => ({
-      ...s,
-      identity: { ...s.identity, wm: skinWm[s.skin] },
-    }))
-  }, [state.skin])
+    const t = setInterval(() => {
+      setClock(clockNow(clockStyle, compactChrome))
+      setPtime(promptTime())
+    }, 1000)
+    setClock(clockNow(clockStyle, compactChrome))
+    return () => clearInterval(t)
+  }, [clockStyle, compactChrome])
 
   useEffect(() => () => stopDemo(), [stopDemo])
 
@@ -304,6 +318,29 @@ export default function App() {
     })
   }, [pushToast])
 
+  const toggleMic = useCallback(() => {
+    setMicMuted((v) => {
+      pushToast(v ? 'Mic on' : 'Mic muted')
+      return !v
+    })
+  }, [pushToast])
+
+  const toggleVpn = useCallback(() => {
+    setVpnOn((v) => {
+      pushToast(v ? 'VPN disconnected' : 'VPN connected')
+      return !v
+    })
+  }, [pushToast])
+
+  const cycleAsus = useCallback(() => {
+    setAsusProfile((cur) => {
+      const idx = ASUS_PROFILES.indexOf(cur)
+      const next = ASUS_PROFILES[(idx + 1) % ASUS_PROFILES.length]
+      pushToast(`asusctl · ${next}`)
+      return next
+    })
+  }, [pushToast])
+
   const cycleBrightness = useCallback(() => {
     setBrightness((b) => {
       const next = b === 40 ? 70 : b === 70 ? 100 : 40
@@ -318,8 +355,83 @@ export default function App() {
 
   const openClock = useCallback(() => {
     setShowLauncher(false)
+    setShowWlogout(false)
     setShowKeybinds(true)
   }, [])
+
+  const openPowerMenu = useCallback(() => {
+    setShowLauncher(false)
+    setShowKeybinds(false)
+    setShowWlogout(true)
+  }, [])
+
+  const copyHost = useCallback(() => {
+    const text = `${state.identity.username}@${state.identity.hostname}`
+    void navigator.clipboard.writeText(text).then(
+      () => pushToast(`copied ${text}`),
+      () => pushToast(text),
+    )
+  }, [state.identity.username, state.identity.hostname, pushToast])
+
+  const cyclePowerProfile = useCallback(() => {
+    setPowerProfile((cur) => {
+      const idx = POWER_PROFILES.indexOf(cur)
+      const next = POWER_PROFILES[(idx + 1) % POWER_PROFILES.length]
+      pushToast(`power-profiles-daemon · ${next}`)
+      return next
+    })
+  }, [pushToast])
+
+  const toggleHakuRec = useCallback(() => {
+    setRecStartedAt((cur) => {
+      if (cur !== null) {
+        pushToast('wf-recorder stopped')
+        return null
+      }
+      pushToast('wf-recorder · recording')
+      return Date.now()
+    })
+  }, [pushToast])
+
+  const handleWlogout = useCallback(
+    (action: WlogoutAction) => {
+      setShowWlogout(false)
+      if (action === 'lock' || action === 'shutdown') {
+        setSleeping(false)
+        setState((s) => ({ ...s, phase: 'landing' }))
+        pushToast(action === 'lock' ? 'lock' : 'shutdown')
+        return
+      }
+      if (action === 'logout') {
+        setState((s) => ({ ...s, phase: 'setup' }))
+        pushToast('logout')
+        return
+      }
+      if (action === 'sleep') {
+        setSleeping(true)
+        pushToast('sleep')
+        return
+      }
+      positionsRef.current = {}
+      setTermLines(['LARP shell ready. Type help. Configs are never executed.'])
+      setTermInput('')
+      setFocusedApp('terminal')
+      setShowLauncher(false)
+      setShowKeybinds(false)
+      setShowLyrics(false)
+      setState((s) => ({
+        ...s,
+        phase: 'stage',
+        openApps: ['terminal'],
+        workspace: 1,
+        workspaces: initialWorkspaces(),
+        recordMode: false,
+        showWallPicker: false,
+      }))
+      pushToast('reboot')
+    },
+    [pushToast],
+  )
 
   const cycleNextWorkspace = useCallback(() => {
     const cur = (state.workspace ?? 1) as WorkspaceId
@@ -332,7 +444,7 @@ export default function App() {
       const temps = [18, 22, 26, 29, 15, 31]
       const idx = temps.indexOf(t)
       const next = temps[(idx < 0 ? 0 : idx + 1) % temps.length]
-      pushToast(`${next}°C · still fake weather`)
+      pushToast(`${next}°C · LARP City`)
       return next
     })
   }, [pushToast])
@@ -493,10 +605,19 @@ export default function App() {
     if (state.phase !== 'stage') return
     const onKey = (e: KeyboardEvent) => {
       const typing = isTypingTarget(e.target)
-      const overlayOpen = showLauncher || showKeybinds || showLyrics || !!state.showWallPicker
+      const overlayOpen =
+        showLauncher || showKeybinds || showLyrics || showWlogout || sleeping || !!state.showWallPicker
+      const shellFocused =
+        !overlayOpen &&
+        focusedApp === 'terminal' &&
+        state.openApps.includes('terminal') &&
+        !typing
+      const mod = e.metaKey || e.ctrlKey || e.altKey
+      // Fake term is not an <input>, so letter hotkeys must yield while it has focus.
+      const swallowBare = typing || (shellFocused && !mod)
 
       // Record mode toggle / exit
-      if (!typing && (e.key === 'r' || e.key === 'R') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      if (!swallowBare && (e.key === 'r' || e.key === 'R') && !mod) {
         e.preventDefault()
         setState((s) => {
           const next = !s.recordMode
@@ -508,6 +629,19 @@ export default function App() {
       if (state.recordMode && e.key === 'Escape' && !overlayOpen) {
         e.preventDefault()
         setState((s) => ({ ...s, recordMode: false }))
+        return
+      }
+
+      if (sleeping && e.key === 'Escape') {
+        e.preventDefault()
+        setSleeping(false)
+        pushToast('resume')
+        return
+      }
+
+      if (showWlogout && e.key === 'Escape') {
+        e.preventDefault()
+        setShowWlogout(false)
         return
       }
 
@@ -541,11 +675,14 @@ export default function App() {
         return
       }
 
-      // Keybind overlay Ctrl+/ or ?
-      if (
-        !typing &&
-        ((e.ctrlKey && (e.key === '/' || e.code === 'Slash')) || e.key === '?')
-      ) {
+      // Keybind overlay Ctrl+/ always. Bare ? only when not feeding the shell.
+      if (!typing && e.ctrlKey && !e.altKey && (e.key === '/' || e.code === 'Slash')) {
+        e.preventDefault()
+        setShowLauncher(false)
+        setShowKeybinds((v) => !v)
+        return
+      }
+      if (!swallowBare && e.key === '?') {
         e.preventDefault()
         setShowLauncher(false)
         setShowKeybinds((v) => !v)
@@ -553,14 +690,7 @@ export default function App() {
       }
 
       // Export bar H (not record mode, not Super)
-      if (
-        !typing &&
-        !state.recordMode &&
-        (e.key === 'h' || e.key === 'H') &&
-        !e.metaKey &&
-        !e.ctrlKey &&
-        !e.altKey
-      ) {
+      if (!swallowBare && !state.recordMode && (e.key === 'h' || e.key === 'H')) {
         e.preventDefault()
         setState((s) => ({ ...s, showExportBar: !s.showExportBar }))
         return
@@ -568,18 +698,18 @@ export default function App() {
 
       // Export E. Without this you cannot shoot with the bar hidden, which is
       // the whole point of hiding it.
-      if (!typing && (e.key === 'e' || e.key === 'E') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      if (!swallowBare && (e.key === 'e' || e.key === 'E')) {
         e.preventDefault()
         void exportPng(lastPresetRef.current)
         return
       }
 
-      if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key === 'm' || e.key === 'M')) {
+      if (!swallowBare && (e.key === 'm' || e.key === 'M')) {
         e.preventDefault()
         toggleMusic()
         return
       }
-      if (!typing && !e.metaKey && !e.ctrlKey && !e.altKey && (e.key === 'l' || e.key === 'L')) {
+      if (!swallowBare && (e.key === 'l' || e.key === 'L')) {
         e.preventDefault()
         setShowLyrics((v) => !v)
         return
@@ -619,12 +749,7 @@ export default function App() {
       }
 
       // Fake shell when terminal focused and no overlay
-      if (
-        !overlayOpen &&
-        focusedApp === 'terminal' &&
-        state.openApps.includes('terminal') &&
-        !typing
-      ) {
+      if (shellFocused) {
         if (e.key === 'Enter') {
           e.preventDefault()
           const line = termInput
@@ -655,6 +780,8 @@ export default function App() {
     showLauncher,
     showKeybinds,
     showLyrics,
+    showWlogout,
+    sleeping,
     toggleMusic,
     focusedApp,
     termInput,
@@ -689,7 +816,7 @@ export default function App() {
       wallpaper: next.wallpaper,
       dotsText: next.dotsSample,
       dotsNote: next.credit || s.dotsNote,
-      identity: { ...s.identity, wm: skinWm[next.skin] },
+      identity: { ...s.identity, wm: wmForSkin(next.skin) },
       showWallPicker: false,
     }))
   }
@@ -706,7 +833,7 @@ export default function App() {
       wallpaper: next.wallpaper,
       dotsText: next.dotsSample,
       dotsNote: next.credit,
-      identity: { ...s.identity, wm: skinWm[next.skin] },
+      identity: { ...s.identity, wm: wmForSkin(next.skin) },
       showWallPicker: false,
     }))
   }
@@ -810,35 +937,21 @@ export default function App() {
         </header>
         <div className="setup-grid">
           <label>
-            Desktop skin
+            Desktop
             <select
               value={state.skin}
               onChange={(e) => {
-                const value = e.target.value
-                if (value !== 'hyprland' && value !== 'gnome' && value !== 'kde') return
-                setState((s) => {
-                  const current = riceById(s.rice)
-                  if (current.skin === value) {
-                    return { ...s, skin: value, identity: { ...s.identity, wm: skinWm[value] } }
-                  }
-                  const next = firstRiceForSkin(value)
-                  return {
-                    ...s,
-                    skin: value,
-                    rice: next.id,
-                    accent: next.accent,
-                    border: next.border,
-                    wallpaper: next.wallpaper,
-                    dotsText: next.dotsSample,
-                    dotsNote: next.credit,
-                    identity: { ...s.identity, wm: skinWm[value] },
-                  }
-                })
+                const skin = e.target.value as Skin
+                if (pack.skin === skin) return
+                const next = RICE_LIST.find((rice) => rice.skin === skin)
+                if (next) applyRice(next.id)
               }}
             >
-              <option value="hyprland">Hyprland</option>
-              <option value="gnome">GNOME</option>
-              <option value="kde">KDE Plasma</option>
+              {SKIN_OPTIONS.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </label>
           <label>
@@ -849,14 +962,10 @@ export default function App() {
                 if (isRiceId(e.target.value)) applyRice(e.target.value)
               }}
             >
-              {SKIN_ORDER.map((skin) => (
-                <optgroup key={skin} label={SKIN_LABEL[skin]}>
-                  {ricesForSkin(skin).map((rice) => (
-                    <option key={rice.id} value={rice.id}>
-                      {rice.label}
-                    </option>
-                  ))}
-                </optgroup>
+              {RICE_LIST.filter((rice) => rice.skin === state.skin).map((rice) => (
+                <option key={rice.id} value={rice.id}>
+                  {rice.label}
+                </option>
               ))}
             </select>
           </label>
@@ -973,7 +1082,7 @@ export default function App() {
           } as CSSProperties
         }
         onMouseDown={() => {
-          if (!showLauncher && !showKeybinds) setFocusedApp(null)
+          if (!showLauncher && !showKeybinds && !showWlogout && !sleeping) setFocusedApp(null)
         }}
       >
         {isViegLike ? (
@@ -985,16 +1094,14 @@ export default function App() {
             wifiOn={wifiOn}
             volMuted={volMuted}
             volLevel={volLevel}
-            onPower={() => {
-              pushToast('wlogout · still larping')
-              setShowKeybinds(false)
-              setShowLauncher(true)
-            }}
+            onPower={openPowerMenu}
             onToggleBt={toggleBt}
             onToggleWifi={toggleWifi}
             onBattery={toastBattery}
             onToggleVol={toggleVol}
             onClock={openClock}
+            onTrayFiles={() => openApp('files')}
+            onTrayClip={copyHost}
           />
         ) : isHaku ? (
           <HakuChrome
@@ -1009,6 +1116,9 @@ export default function App() {
             cavaLevels={cavaLevels}
             monitorOpen={hakuMonitorOpen}
             openApps={state.openApps}
+            powerProfile={powerProfile}
+            recLabel={recLabel}
+            recOn={recOn}
             onLauncher={() => setShowLauncher(true)}
             onSettings={() => setState((s) => ({ ...s, phase: 'setup' }))}
             onClock={openClock}
@@ -1018,72 +1128,12 @@ export default function App() {
             onCycleBrightness={cycleBrightness}
             onToggleVol={toggleVol}
             onBattery={toastBattery}
-            onPower={() => {
-              pushToast('wlogout · still larping')
-              setShowLauncher(true)
-            }}
-            onToggleApp={toggleApp}
-          />
-        ) : isHyprBar && pack.hyprVariant ? (
-          <HyprBar
-            variant={pack.hyprVariant}
-            workspace={workspace}
-            goWorkspace={goWorkspace}
-            clock={clock}
-            wifiOn={wifiOn}
-            volMuted={volMuted}
-            volLevel={volLevel}
-            onLauncher={() => {
-              setShowKeybinds(false)
-              setShowLauncher(true)
-            }}
-            onClock={openClock}
-            onToggleWifi={toggleWifi}
-            onToggleVol={toggleVol}
-            onPower={() => {
-              pushToast('wlogout · still larping')
-              setShowLauncher(true)
-            }}
-          />
-        ) : isGnome ? (
-          <GnomeChrome
-            workspace={workspace}
-            goWorkspace={goWorkspace}
-            clock={clock}
-            displayName={state.identity.displayName}
-            focusedApp={focusedApp}
-            openApps={state.openApps}
-            wifiOn={wifiOn}
-            volMuted={volMuted}
-            onLauncher={() => {
-              setShowKeybinds(false)
-              setShowLauncher(true)
-            }}
-            onClock={openClock}
-            onToggleWifi={toggleWifi}
-            onToggleVol={toggleVol}
-            onToggleApp={toggleApp}
-            onUser={() => pushToast(`Hi, ${state.identity.displayName}`)}
-          />
-        ) : isKde ? (
-          <KdeChrome
-            workspace={workspace}
-            goWorkspace={goWorkspace}
-            clock={clock}
-            displayName={state.identity.displayName}
-            openApps={state.openApps}
-            wifiOn={wifiOn}
-            volMuted={volMuted}
-            btOn={btOn}
-            onLauncher={() => {
-              setShowKeybinds(false)
-              setShowLauncher(true)
-            }}
-            onClock={openClock}
-            onToggleWifi={toggleWifi}
-            onToggleVol={toggleVol}
-            onToggleBt={toggleBt}
-            onToggleApp={toggleApp}
+            onPower={openPowerMenu}
+            onOpenApp={openApp}
+            onTrayFiles={() => openApp('files')}
+            onTrayClip={copyHost}
+            onPowerProfile={cyclePowerProfile}
+            onToggleRec={toggleHakuRec}
           />
         ) : isEnd4 ? (
           <End4Chrome
@@ -1109,56 +1159,90 @@ export default function App() {
             onToggleMusic={toggleMusic}
             onSkip={() => skipTrack(1)}
             onWeather={toastWeather}
-            onUser={() => pushToast(`Hi, ${state.identity.displayName}`)}
+            onUser={() => setState((s) => ({ ...s, phase: 'setup' }))}
+          />
+        ) : isGnome ? (
+          <GnomeChrome
+            workspace={workspace}
+            goWorkspace={goWorkspace}
+            clock={clock}
+            displayName={state.identity.displayName}
+            focusedApp={focusedApp}
+            openApps={state.openApps}
+            wifiOn={wifiOn}
+            volMuted={volMuted}
+            onLauncher={() => {
+              setShowKeybinds(false)
+              setShowLauncher(true)
+            }}
+            onClock={openClock}
+            onToggleWifi={toggleWifi}
+            onToggleVol={toggleVol}
+            onOpenApp={openApp}
+            onUser={() => setState((s) => ({ ...s, phase: 'setup' }))}
+            onPower={openPowerMenu}
+          />
+        ) : isSocrates ? (
+          <SocratesBar
+            workspace={workspace}
+            goWorkspace={goWorkspace}
+            clock={clock}
+            btOn={btOn}
+            wifiOn={wifiOn}
+            volMuted={volMuted}
+            volLevel={volLevel}
+            brightness={brightness}
+            micMuted={micMuted}
+            vpnOn={vpnOn}
+            asusProfile={asusProfile}
+            onPower={openPowerMenu}
+            onToggleBt={toggleBt}
+            onToggleWifi={toggleWifi}
+            onToggleMic={toggleMic}
+            onToggleVpn={toggleVpn}
+            onToggleVol={toggleVol}
+            onBattery={toastBattery}
+            onClock={openClock}
+            onCycleBrightness={cycleBrightness}
+            onCycleAsus={cycleAsus}
           />
         ) : (
-          <div className="panel">
-            <div className="panel-left">
-              <strong>{state.skin === 'gnome' ? 'Activities' : state.skin === 'kde' ? 'Application Launcher' : 'LARP'}</strong>
-              <button type="button" onClick={() => toggleApp('terminal')}>
-                Terminal
-              </button>
-              <button type="button" onClick={() => toggleApp('browser')}>
-                Browser
-              </button>
-              <button type="button" onClick={() => toggleApp('files')}>
-                Files
-              </button>
-              <div className="workspaces plain-ws">
-                {WORKSPACE_IDS.map((id) => (
-                  <button
-                    key={id}
-                    type="button"
-                    className={`ws${workspace === id ? ' active' : ''}`}
-                    onClick={() => goWorkspace(id)}
-                  >
-                    {id}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="panel-right">
-              <span>
-                {state.identity.displayName} · {state.identity.username}@{state.identity.hostname}
-              </span>
-              <span>{clock}</span>
-            </div>
-          </div>
+          <KdeChrome
+            workspace={workspace}
+            goWorkspace={goWorkspace}
+            clock={clock}
+            focusedApp={focusedApp}
+            openApps={state.openApps}
+            wifiOn={wifiOn}
+            volMuted={volMuted}
+            btOn={btOn}
+            onLauncher={() => {
+              setShowKeybinds(false)
+              setShowLauncher(true)
+            }}
+            onClock={openClock}
+            onToggleWifi={toggleWifi}
+            onToggleVol={toggleVol}
+            onToggleBt={toggleBt}
+            onBattery={toastBattery}
+            onOpenApp={openApp}
+            onPower={openPowerMenu}
+          />
         )}
 
         {showDesktopIcons && (
-
           <div className="icons">
-            <button type="button" onClick={() => toggleApp('terminal')}>
-              <span>🖥️</span>
-              kitty
-            </button>
-            <button type="button" onClick={() => toggleApp('browser')}>
-              <span>🌐</span>firefox
-            </button>
-            <button type="button" onClick={() => toggleApp('files')}>
-              <span>📁</span>thunar
-            </button>
+            {DESKTOP_APPS.map((app) => (
+              <button
+                key={app}
+                type="button"
+                className={state.openApps.includes(app) ? 'on' : undefined}
+                onClick={() => openApp(app)}
+              >
+                <AppIcon app={app} size={48} skin={state.skin} />
+                {appLabel({ app, skin: state.skin })}
+              </button>
+            ))}
           </div>
         )}
 
@@ -1258,7 +1342,7 @@ export default function App() {
           )}
           {state.openApps.includes('files') && (
             <FakeWindow
-              title="Home"
+              title={state.skin === 'kde' ? 'Dolphin — Home' : state.skin === 'gnome' ? 'Files — Home' : 'Home'}
               onClose={() => toggleApp('files')}
               x={filesPos.x}
               y={filesPos.y}
@@ -1316,6 +1400,20 @@ export default function App() {
 
         {showLauncher && (
           <Launcher riceClass={riceClassName} onLaunch={handleLauncher} onClose={() => setShowLauncher(false)} />
+        )}
+        {showWlogout && <Wlogout onPick={handleWlogout} onClose={() => setShowWlogout(false)} />}
+        {sleeping && (
+          <button
+            type="button"
+            className="sleep-veil"
+            aria-label="Wake"
+            onClick={() => {
+              setSleeping(false)
+              pushToast('resume')
+            }}
+          >
+            sleep
+          </button>
         )}
         {showLyrics && (
           <LyricsPanel

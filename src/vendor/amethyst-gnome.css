@@ -1,0 +1,232 @@
+/* Port of Aevstiel/amethyst .themes/Catppuccin/gnome-shell/gnome-shell.css
+   #panel / #dash / #dashtodockContainer. Mapped onto LARP classes.
+   Upstream gnome-shell.css header is LGPL-2.1. */
+
+.rice-gnome-amethyst {
+  --ame-base: #1e1e2e;
+  --ame-text: #eff1f5;
+  --ame-blue: #89b4fa;
+  --ame-mauve: #cba6f7;
+  --ame-surface: #313244;
+}
+
+.rice-gnome-amethyst .gnome-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  height: 35px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  overflow: hidden;
+  padding: 0 8px;
+  color: rgba(239, 241, 245, 0.7);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 12pt;
+  background-color: rgba(30, 30, 46, 0.85);
+  border: none;
+  box-shadow: none;
+}
+
+.rice-gnome-amethyst .gnome-panel-left,
+.rice-gnome-amethyst .gnome-panel-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rice-gnome-amethyst .gnome-panel-right {
+  justify-content: flex-end;
+}
+
+.rice-gnome-amethyst .gnome-clock {
+  justify-self: center;
+}
+
+.rice-gnome-amethyst .gnome-btn {
+  border: 3px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: #eff1f5;
+  font: inherit;
+  font-weight: 700;
+  padding: 0 12px;
+  min-height: 28px;
+  line-height: 1;
+  box-shadow: none;
+  text-shadow: none;
+  cursor: pointer;
+}
+
+.rice-gnome-amethyst .gnome-activities {
+  padding: 0 18px;
+}
+
+.rice-gnome-amethyst .gnome-btn:hover {
+  color: #89b4fa;
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1000px rgba(57, 57, 72, 0.624);
+}
+
+.rice-gnome-amethyst .gnome-ws-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 3px;
+}
+
+.rice-gnome-amethyst .gnome-ws-dot {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background-color: #eff1f5;
+  opacity: 0.45;
+  cursor: pointer;
+}
+
+.rice-gnome-amethyst .gnome-ws-dot.active {
+  opacity: 1;
+}
+
+.rice-gnome-amethyst .gnome-app-menu {
+  color: #eff1f5;
+  font-size: 11pt;
+  padding: 0 8px;
+}
+
+.rice-gnome-amethyst .gnome-dash {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  padding: 12px 0;
+}
+
+.rice-gnome-amethyst .gnome-dash-bg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 4px 3px;
+  background-color: rgba(30, 30, 46, 0.85);
+  box-shadow: inset 0 0 0 1px rgba(239, 241, 245, 0.12);
+  border-radius: 23px;
+}
+
+.rice-gnome-amethyst .gnome-dash-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin: 0 2px;
+  padding: 6px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  cursor: pointer;
+  color: #eff1f5;
+}
+
+.rice-gnome-amethyst .gnome-dash-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  padding: 6px;
+  background-color: transparent;
+  transition: background-color 100ms;
+}
+
+.rice-gnome-amethyst .gnome-dash-item:hover .gnome-dash-icon {
+  background-color: rgba(239, 241, 245, 0.15);
+  box-shadow: inset 0 0 0 1px rgba(239, 241, 245, 0.15);
+}
+
+.rice-gnome-amethyst .gnome-dash-item.focused .gnome-dash-icon {
+  background-color: rgba(239, 241, 245, 0.12);
+}
+
+.rice-gnome-amethyst .gnome-running-dot {
+  width: 6px;
+  height: 6px;
+  margin-top: 2px;
+  border-radius: 9999px;
+  background-color: rgba(239, 241, 245, 0.3);
+}
+
+.rice-gnome-amethyst .gnome-dash-item.focused .gnome-running-dot {
+  background-color: #e6e9ef;
+}
+
+.rice-gnome-amethyst .gnome-dash-sep {
+  width: 24px;
+  height: 1px;
+  margin: 4px 0;
+  background-color: rgba(239, 241, 245, 0.25);
+}
+
+.rice-gnome-amethyst .gnome-show-apps .gnome-dash-icon {
+  font-size: 18px;
+  color: rgba(239, 241, 245, 0.7);
+}
+
+.rice-gnome-amethyst .icons {
+  top: 48px;
+  left: 86px;
+}
+
+.rice-gnome-amethyst .windows {
+  inset: 12px;
+  top: 47px;
+  left: 86px;
+}
+
+.rice-gnome-amethyst .window {
+  border-radius: 12px;
+  border: 1px solid rgba(203, 166, 247, 0.45);
+  background: rgba(30, 30, 46, 0.94);
+}
+
+.rice-gnome-amethyst .titlebar {
+  background: color-mix(in srgb, #cba6f7 16%, #1e1e2e);
+  color: #cdd6f4;
+}
+
+.rice-gnome-amethyst .term { color: #a6e3a1; }
+
+.rice-gnome-amethyst .export-bar,
+.export-bar.rice-gnome-amethyst {
+  background: rgba(30, 30, 46, 0.92);
+  border: 1px solid rgba(203, 166, 247, 0.35);
+  border-radius: 12px;
+}
+
+.export-bar.rice-gnome-amethyst button {
+  border-radius: 12px;
+  background: transparent;
+  color: #cdd6f4;
+  border-color: rgba(205, 214, 244, 0.18);
+}
+
+.export-bar.rice-gnome-amethyst button.primary {
+  background: #cba6f7;
+  color: #1e1e2e;
+  border-color: transparent;
+}
+
+.export-peek.rice-gnome-amethyst { color: #cba6f7; border-radius: 12px; }
+
+.rice-gnome-amethyst .launcher-panel,
+.rice-gnome-amethyst .keybind-panel {
+  border-color: #cba6f7;
+  background: rgba(30, 30, 46, 0.94);
+  border-radius: 12px;
+}

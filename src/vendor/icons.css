@@ -26,7 +26,13 @@
 .nf-plug::before,
 .nf-warn::before,
 .nf-mpris-on::before,
-.nf-mpris-off::before {
+.nf-mpris-off::before,
+.nf-soc-clock::before,
+.nf-soc-power::before,
+.nf-soc-wifi::before,
+.nf-mic::before,
+.nf-mic-off::before,
+.nf-vpn::before {
   font-family: var(--nf);
   font-style: normal;
   font-weight: 400;
@@ -65,6 +71,13 @@
 .nf-warn::before { content: "\f071"; }
 .nf-mpris-on::before { content: "\f0f4"; }
 .nf-mpris-off::before { content: "\f04c"; }
+/* socrates-KDE clock , power 󰤆, wifi 󰤨 */
+.nf-soc-clock::before { content: "\f043a"; }
+.nf-soc-power::before { content: "\f0906"; }
+.nf-soc-wifi::before { content: "\f0928"; }
+.nf-mic::before { content: "\f130"; }
+.nf-mic-off::before { content: "\f131"; }
+.nf-vpn::before { content: "\f023"; }
 
 i[class^="nf-"],
 span[class^="nf-"],

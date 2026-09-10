@@ -108,17 +108,11 @@
   line-height: 20px;
 }
 
+.rice-viegphunt .wb.tray:hover {
+  background-color: color-mix(in srgb, var(--vieg-select) 60%, transparent);
+}
+
 .rice-viegphunt .ws.urgent {
   background-color: var(--vieg-red);
   padding: 0 8px;
-}
-
-.rice-mocha-alt .ws.active {
-  color: var(--vieg-blue);
-  border-color: var(--vieg-blue);
-}
-
-.rice-mocha-alt .ws:hover {
-  color: var(--vieg-blue);
-  border-bottom-color: var(--vieg-blue);
 }

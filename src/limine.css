@@ -98,6 +98,20 @@
   min-height: 0;
 }
 
+.limine-heading {
+  margin: 0.7rem 0 0.1rem;
+  padding: 0.15rem 0.85rem 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #1793d1;
+}
+
+.limine-heading:first-child {
+  margin-top: 0.1rem;
+}
+
 .limine-entry {
   width: 100%;
   display: flex;

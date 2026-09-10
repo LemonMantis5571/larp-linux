@@ -1,0 +1,185 @@
+/* Port of prudhvibungatavula/socrates-KDE waybar/style.css + config.
+   Selectors mapped onto LARP classes. */
+
+.rice-kde-socrates {
+  --soc-bg: #282c34;
+  --soc-mod: #292d35;
+  --soc-fg: #9cdef2;
+  --soc-blue: #61afef;
+  --soc-cyan: #56b6c2;
+  --soc-peach: #fab387;
+  --soc-hover: #4c566a;
+}
+
+.rice-kde-socrates .socrates-bar {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  right: 10px;
+  height: 48px;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  background: #282c34;
+  color: #9cdef2;
+  border-top: 3px solid #61afef;
+  border-bottom: 3px solid #61afef;
+  border-left: 3px solid #56b6c2;
+  border-right: 3px solid #56b6c2;
+  border-radius: 2px;
+  font-family: var(--nf);
+  font-size: 14px;
+  opacity: 0.95;
+  overflow: hidden;
+}
+
+.rice-kde-socrates .soc-left,
+.rice-kde-socrates .soc-center,
+.rice-kde-socrates .soc-right {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.rice-kde-socrates .soc-left {
+  justify-self: start;
+  overflow: hidden;
+}
+
+.rice-kde-socrates .soc-center {
+  justify-self: center;
+}
+
+.rice-kde-socrates .soc-right {
+  justify-self: end;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.rice-kde-socrates .soc-mod {
+  padding: 2px 10px;
+  margin: 7px 6px;
+  background-color: #292d35;
+  border: 2px solid #61afef;
+  border-radius: 2px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.rice-kde-socrates .soc-clock {
+  font-weight: 700;
+  font-size: 12px;
+  color: #fab387;
+}
+
+.rice-kde-socrates .soc-power {
+  color: #9cdef2;
+}
+
+.rice-kde-socrates .soc-bt {
+  color: #56b6c2;
+}
+
+.rice-kde-socrates .soc-bt.disabled {
+  color: #fab387;
+}
+
+.rice-kde-socrates .soc-asus {
+  font-weight: 700;
+  font-size: 16px;
+  color: #e5c07b;
+}
+
+.rice-kde-socrates .soc-vol.muted {
+  background-color: #f38ba8;
+  color: #1e1e2e;
+}
+
+.rice-kde-socrates .soc-mod:hover {
+  background-color: #4c566a;
+  border: 2px solid #56b6c2;
+  color: #56b6c2;
+}
+
+.rice-kde-socrates .soc-ws {
+  all: unset;
+  font-size: 18px;
+  padding: 0 6px;
+  margin: 4px 0;
+  background: transparent;
+  border: none;
+  color: #56b6c2;
+  cursor: pointer;
+  min-width: 1.2em;
+  text-align: center;
+}
+
+.rice-kde-socrates .soc-ws.active {
+  color: #fab387;
+  background-color: #56b6c2;
+  border-radius: 4px;
+}
+
+.rice-kde-socrates .soc-ws:hover {
+  color: #2e3440;
+  background-color: #56b6c2;
+  border-radius: 4px;
+}
+
+.rice-kde-socrates .icons {
+  top: 68px;
+  left: 1rem;
+}
+
+.rice-kde-socrates .windows {
+  inset: 10px;
+  top: 62px;
+}
+
+.rice-kde-socrates .window {
+  border-radius: 4px;
+  border: 2px solid #61afef;
+  background: rgba(40, 44, 52, 0.94);
+}
+
+.rice-kde-socrates .titlebar {
+  background: #3b4252;
+  color: #9cdef2;
+  font-family: var(--nf);
+  font-size: 12px;
+}
+
+.rice-kde-socrates .term { color: #98c379; }
+
+.export-bar.rice-kde-socrates {
+  background: #282c34;
+  border: 2px solid #61afef;
+  border-radius: 2px;
+  font-family: var(--nf);
+}
+
+.export-bar.rice-kde-socrates button {
+  border-radius: 2px;
+  background: #292d35;
+  color: #9cdef2;
+  border: 2px solid #61afef;
+}
+
+.export-bar.rice-kde-socrates button.primary {
+  background: #61afef;
+  color: #282c34;
+  border-color: transparent;
+}
+
+.export-peek.rice-kde-socrates { color: #61afef; border-radius: 2px; }
+
+.rice-kde-socrates .launcher-panel,
+.rice-kde-socrates .keybind-panel {
+  border: 2px solid #56b6c2;
+  background: #3b4252;
+  border-radius: 2px;
+  color: #9cdef2;
+}

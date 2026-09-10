@@ -1,0 +1,201 @@
+/* Tokens from catppuccin/kde generated/color-schemes/CatppuccinMochaMauve.colors.
+   Breeze-like Plasma panel LARP. MIT. */
+
+.rice-kde-catppuccin {
+  --ctp-base: #1e1e2e;
+  --ctp-mantle: #181825;
+  --ctp-crust: #11111b;
+  --ctp-text: #cdd6f4;
+  --ctp-sub: #a6adc8;
+  --ctp-surface: #313244;
+  --ctp-overlay: #45475a;
+  --ctp-mauve: #cba6f7;
+}
+
+.rice-kde-catppuccin .kde-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  height: 44px;
+  display: flex;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  background: #181825;
+  color: #cdd6f4;
+  border-top: 1px solid #313244;
+  font-family: var(--nf);
+  font-size: 13px;
+}
+
+.shell:has(> .export-bar) .rice-kde-catppuccin .kde-panel {
+  bottom: 68px;
+}
+
+.shell:has(> .export-bar) .rice-kde-catppuccin .windows {
+  bottom: 120px;
+}
+
+.rice-kde-catppuccin .kde-kickoff {
+  width: 44px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #cba6f7;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.rice-kde-catppuccin .kde-kickoff:hover {
+  background: #313244;
+}
+
+.rice-kde-catppuccin .kde-pager {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 44px;
+  padding: 4px;
+  gap: 2px;
+}
+
+.rice-kde-catppuccin .kde-pager-cell {
+  border: 1px solid #45475a;
+  border-radius: 2px;
+  background: #1e1e2e;
+  color: #a6adc8;
+  font-size: 9px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.rice-kde-catppuccin .kde-pager-cell.active {
+  background: #cba6f7;
+  color: #11111b;
+  border-color: #cba6f7;
+}
+
+.rice-kde-catppuccin .kde-tasks {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+  padding: 2px 6px;
+}
+
+.rice-kde-catppuccin .kde-task {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  padding: 0;
+}
+
+.rice-kde-catppuccin .kde-task:hover {
+  background: #313244;
+}
+
+.rice-kde-catppuccin .kde-task.running::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(203, 166, 247, 0.45);
+}
+
+.rice-kde-catppuccin .kde-task.focused {
+  background: #313244;
+}
+
+.rice-kde-catppuccin .kde-task.focused::after {
+  background: #cba6f7;
+}
+
+.rice-kde-catppuccin .kde-tray {
+  display: flex;
+  align-items: center;
+  padding-right: 6px;
+}
+
+.rice-kde-catppuccin .kde-tray-btn,
+.rice-kde-catppuccin .kde-clock {
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #cdd6f4;
+  padding: 0 8px;
+  min-height: 32px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.rice-kde-catppuccin .kde-clock {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.rice-kde-catppuccin .kde-tray-btn:hover,
+.rice-kde-catppuccin .kde-clock:hover {
+  background: #313244;
+}
+
+.rice-kde-catppuccin .icons {
+  top: 1.25rem;
+  left: 1rem;
+}
+
+.rice-kde-catppuccin .windows {
+  inset: 8px;
+  bottom: 52px;
+}
+
+.rice-kde-catppuccin .window {
+  border-radius: 6px;
+  border: 1px solid #cba6f7;
+  background: rgba(30, 30, 46, 0.94);
+}
+
+.rice-kde-catppuccin .titlebar {
+  background: #1e1e2e;
+  color: #cdd6f4;
+}
+
+.rice-kde-catppuccin .term { color: #a6e3a1; }
+
+.export-bar.rice-kde-catppuccin {
+  background: rgba(24, 24, 37, 0.94);
+  border: 1px solid #cba6f7;
+  border-radius: 6px;
+}
+
+.export-bar.rice-kde-catppuccin button {
+  border-radius: 6px;
+  background: #313244;
+  color: #cdd6f4;
+  border-color: transparent;
+}
+
+.export-bar.rice-kde-catppuccin button.primary {
+  background: #cba6f7;
+  color: #11111b;
+}
+
+.export-peek.rice-kde-catppuccin { color: #cba6f7; border-radius: 6px; }
+
+.rice-kde-catppuccin .launcher-panel,
+.rice-kde-catppuccin .keybind-panel {
+  border-color: #cba6f7;
+  background: rgba(24, 24, 37, 0.96);
+  border-radius: 6px;
+}

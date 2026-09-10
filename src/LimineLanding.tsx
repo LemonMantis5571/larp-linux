@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
-import { BOOT_ENTRIES, type BootEntry } from './rices'
+import {
+  BOOT_ENTRIES,
+  firstBootIndex,
+  lastBootIndex,
+  stepBootIndex,
+  type BootEntry,
+} from './rices'
 import type { RiceId } from './types'
 import './limine.css'
 
@@ -12,39 +18,39 @@ export function LimineLanding({
   onSetup: () => void
   onEdit: (id: RiceId) => void
 }) {
-  const [index, setIndex] = useState(0)
-  const selected = BOOT_ENTRIES[index] ?? BOOT_ENTRIES[0]
+  const [index, setIndex] = useState(firstBootIndex)
+  const selected = BOOT_ENTRIES[index] ?? BOOT_ENTRIES[firstBootIndex()]
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
-        setIndex((i) => Math.min(i + 1, BOOT_ENTRIES.length - 1))
+        setIndex((i) => stepBootIndex(i, 1))
         return
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault()
-        setIndex((i) => Math.max(i - 1, 0))
+        setIndex((i) => stepBootIndex(i, -1))
         return
       }
       if (e.key === 'Home') {
         e.preventDefault()
-        setIndex(0)
+        setIndex(firstBootIndex())
         return
       }
       if (e.key === 'End') {
         e.preventDefault()
-        setIndex(BOOT_ENTRIES.length - 1)
+        setIndex(lastBootIndex())
         return
       }
       if (e.key === 'Enter') {
         e.preventDefault()
-        activate(selected, 'boot')
+        if (selected) activate(selected, 'boot')
         return
       }
       if (e.key === 'e' || e.key === 'E') {
         e.preventDefault()
-        activate(selected, 'edit')
+        if (selected) activate(selected, 'edit')
       }
     }
     window.addEventListener('keydown', onKey)
@@ -52,6 +58,7 @@ export function LimineLanding({
   }, [selected])
 
   function activate(entry: BootEntry, mode: 'boot' | 'edit') {
+    if (entry.kind === 'heading') return
     if (entry.kind === 'firmware') {
       onSetup()
       return
@@ -76,6 +83,13 @@ export function LimineLanding({
 
         <ul className="limine-list" role="listbox" aria-label="Boot entries">
           {BOOT_ENTRIES.map((entry, i) => {
+            if (entry.kind === 'heading') {
+              return (
+                <li key={`heading-${entry.label}`} className="limine-heading" role="presentation">
+                  {entry.label}
+                </li>
+              )
+            }
             const active = i === index
             const key = entry.kind === 'firmware' ? 'firmware' : entry.rice
             return (

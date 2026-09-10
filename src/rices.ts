@@ -1,19 +1,17 @@
-/** Visual-only rice packs. Never execute real configs. */
+/** Visual-only rice packs. Configs never run. */
 
 import type { RiceId, Skin } from './types'
 import { ALL_DOTFILE_WALLS, END4_WALLS, EXTRA_LOCAL, wallpaperUrl, viegLocal } from './wallpapers'
 
 export type { RiceId }
 
-export type ChromeKind = 'plain' | 'vieg' | 'haku' | 'end4' | 'hypr' | 'gnome' | 'kde'
-export type HyprVariant = 'hyde' | 'tokyo' | 'nord'
+export type ChromeKind = 'vieg' | 'haku' | 'end4' | 'gnome' | 'kde' | 'socrates'
 
 export type RicePack = {
   id: RiceId
   label: string
   skin: Skin
   chrome: ChromeKind
-  hyprVariant?: HyprVariant
   className: string
   credit: string
   accent: string
@@ -25,30 +23,34 @@ export type RicePack = {
 }
 
 const uniq = (xs: string[]) => [...new Set(xs)]
-const walls = uniq([...viegLocal, ...END4_WALLS, ...EXTRA_LOCAL, ...ALL_DOTFILE_WALLS])
+const SHARED_WALLS = uniq([...ALL_DOTFILE_WALLS])
+
+export function wmForSkin(skin: Skin): string {
+  if (skin === 'gnome') return 'GNOME Shell'
+  if (skin === 'kde') return 'KWin'
+  return 'Hyprland'
+}
+
+export const SKIN_LABEL: Record<Skin, string> = {
+  hyprland: 'Hyprland',
+  gnome: 'GNOME',
+  kde: 'KDE Plasma',
+}
+
+export const SKIN_OPTIONS: { id: Skin; label: string }[] = [
+  { id: 'hyprland', label: SKIN_LABEL.hyprland },
+  { id: 'gnome', label: SKIN_LABEL.gnome },
+  { id: 'kde', label: SKIN_LABEL.kde },
+]
 
 export const RICES: Record<RiceId, RicePack> = {
-  default: {
-    id: 'default',
-    label: 'Default Hypr',
-    skin: 'hyprland',
-    chrome: 'plain',
-    className: '',
-    credit: '',
-    accent: '#89b4fa',
-    wallpaper: wallpaperUrl('misty-seascape.jpg'),
-    walls,
-    border: '#89b4fa',
-    dotsSample: '',
-    terminal: 'kitty',
-  },
   viegphunt: {
     id: 'viegphunt',
-    label: 'ViegPhunt (Arch-Hyprland)',
+    label: 'ViegPhunt',
     skin: 'hyprland',
     chrome: 'vieg',
     className: 'rice-viegphunt',
-    credit: 'Walls: ViegPhunt/Wallpaper-Collection (all 8). Visual LARP only.',
+    credit: 'ViegPhunt Arch-Hyprland. Catppuccin Mocha waybar.',
     accent: '#f5c2e7',
     wallpaper: wallpaperUrl('misty-seascape.jpg'),
     walls: uniq([...viegLocal, ...EXTRA_LOCAL, ...END4_WALLS]),
@@ -61,42 +63,27 @@ rounding = 2
 `,
     terminal: 'ghostty',
   },
-  'mocha-alt': {
-    id: 'mocha-alt',
-    label: 'Mocha Alt (LARP pack)',
-    skin: 'hyprland',
-    chrome: 'vieg',
-    className: 'rice-viegphunt rice-mocha-alt',
-    credit: 'Same real wall collection, blue accent',
-    accent: '#89b4fa',
-    wallpaper: wallpaperUrl('sea-horizon-sky.jpg'),
-    walls: uniq([...viegLocal, ...ALL_DOTFILE_WALLS]),
-    border: '#89b4fa',
-    dotsSample: `/* Mocha Alt */\n@define-color blue #89b4fa\n`,
-    terminal: 'ghostty',
-  },
   hakuspace: {
     id: 'hakuspace',
     label: 'Hakuspace',
     skin: 'hyprland',
     chrome: 'haku',
     className: 'rice-hakuspace',
-    credit:
-      'Hakuspace has no in-repo walls (~/Pictures only). Using Vieg collection + end4 default.',
+    credit: 'Hakuspace island bar and dock. Shared wall pile.',
     accent: '#E8DCC8',
     wallpaper: wallpaperUrl('kita.png'),
     walls: uniq([...ALL_DOTFILE_WALLS]),
     border: '#E8DCC8',
-    dotsSample: `/* Hakuspace LARP */\n@define-color accent_color #E8DCC8\n`,
+    dotsSample: `/* Hakuspace */\n@define-color accent_color #E8DCC8\n`,
     terminal: 'kitty',
   },
   end4: {
     id: 'end4',
-    label: 'end4-pC (Material 3)',
+    label: 'end4-pC',
     skin: 'hyprland',
     chrome: 'end4',
     className: 'rice-end4',
-    credit: 'end4 default wallpaper + shared real wall collection',
+    credit: 'end4-pC Material 3 bar. Default wall plus the pile.',
     accent: '#cbc4cb',
     wallpaper: END4_WALLS[0],
     walls: uniq([...END4_WALLS, ...viegLocal, ...EXTRA_LOCAL]),
@@ -104,239 +91,152 @@ rounding = 2
     dotsSample: `/* end4-pC M3 */\nm3primary=#cbc4cb\nm3background=#141313\n`,
     terminal: 'kitty',
   },
-  hyde: {
-    id: 'hyde',
-    label: 'HyDE',
-    skin: 'hyprland',
-    chrome: 'hypr',
-    hyprVariant: 'hyde',
-    className: 'rice-hyde',
-    credit: 'Visual LARP of HyDE-Project/HyDE (formerly prasanthrangan/hyprdots). Colors only.',
-    accent: '#00bbd4',
-    wallpaper: wallpaperUrl('bridge-sea-middle-mountains.jpg'),
-    walls,
-    border: '#00bbd4',
-    dotsSample: `/* HyDE LARP */\n$accent = #00bbd4\ncol.active_border = rgba(00bbd4ee)\n`,
-    terminal: 'kitty',
-  },
-  'tokyo-hypr': {
-    id: 'tokyo-hypr',
-    label: 'Tokyo Night Hypr',
-    skin: 'hyprland',
-    chrome: 'hypr',
-    hyprVariant: 'tokyo',
-    className: 'rice-tokyo-hypr',
-    credit: 'Tokyo Night palette (enkia/tokyo-night). Visual LARP, not a full dots port.',
-    accent: '#7aa2f7',
-    wallpaper: wallpaperUrl('black-and-white-anime-bartender-girl.png'),
-    walls,
-    border: '#7aa2f7',
-    dotsSample: `/* Tokyo Night Hypr LARP */\n$accent = #7aa2f7\n$bg = #1a1b26\n`,
-    terminal: 'kitty',
-  },
-  'nord-hypr': {
-    id: 'nord-hypr',
-    label: 'Nord Hypr',
-    skin: 'hyprland',
-    chrome: 'hypr',
-    hyprVariant: 'nord',
-    className: 'rice-nord-hypr',
-    credit: 'Nord palette (nordtheme/nord). Visual LARP, not a full dots port.',
-    accent: '#88c0d0',
-    wallpaper: wallpaperUrl('snow-covered-mountains-northern-india.jpg'),
-    walls,
-    border: '#88c0d0',
-    dotsSample: `/* Nord Hypr LARP */\n$accent = #88c0d0\n$bg = #2e3440\n`,
-    terminal: 'kitty',
-  },
-  'gnome-adwaita': {
-    id: 'gnome-adwaita',
-    label: 'GNOME Adwaita',
+  'gnome-amethyst': {
+    id: 'gnome-amethyst',
+    label: 'Amethyst',
     skin: 'gnome',
     chrome: 'gnome',
-    className: 'rice-gnome rice-gnome-adwaita',
-    credit: 'Stock Adwaita Dark look. GNOME Shell chrome only, visual LARP.',
-    accent: '#3584e4',
-    wallpaper: wallpaperUrl('sea-horizon-sky.jpg'),
-    walls,
-    border: '#3584e4',
-    dotsSample: `/* Adwaita Dark */\naccent_color=#3584e4\n`,
-    terminal: 'kgx',
-  },
-  'gnome-catppuccin': {
-    id: 'gnome-catppuccin',
-    label: 'GNOME Catppuccin',
-    skin: 'gnome',
-    chrome: 'gnome',
-    className: 'rice-gnome rice-gnome-catppuccin',
-    credit: 'Catppuccin Mocha on GNOME (catppuccin/gtk). Colors only.',
+    className: 'rice-gnome-amethyst',
+    credit: 'Aevstiel/amethyst. Catppuccin Mocha gnome-shell plus Dash to Dock.',
     accent: '#cba6f7',
-    wallpaper: wallpaperUrl('misty-seascape.jpg'),
-    walls,
+    wallpaper: wallpaperUrl('black-and-white-anime-bartender-girl.png'),
+    walls: SHARED_WALLS,
     border: '#cba6f7',
-    dotsSample: `/* Catppuccin Mocha GTK */\naccent_color=#cba6f7\n`,
-    terminal: 'kgx',
+    dotsSample: `/* Aevstiel/amethyst Catppuccin Mocha */
+#panel { height: 35px; background-color: rgba(30, 30, 46, 0.85); }
+accent = #cba6f7
+`,
+    terminal: 'gnome-console',
   },
-  'gnome-tokyonight': {
-    id: 'gnome-tokyonight',
-    label: 'GNOME Tokyo Night',
+  'gnome-sweet': {
+    id: 'gnome-sweet',
+    label: 'Sweet',
     skin: 'gnome',
     chrome: 'gnome',
-    className: 'rice-gnome rice-gnome-tokyonight',
-    credit: 'Tokyo Night GTK look (Fausto-Korpsvart/Tokyo-Night-GTK-Theme). Colors only.',
-    accent: '#7aa2f7',
-    wallpaper: wallpaperUrl('fishing.jpg'),
-    walls,
-    border: '#7aa2f7',
-    dotsSample: `/* Tokyo Night GTK */\naccent_color=#7aa2f7\n`,
-    terminal: 'kgx',
-  },
-  'gnome-nord': {
-    id: 'gnome-nord',
-    label: 'GNOME Nord',
-    skin: 'gnome',
-    chrome: 'gnome',
-    className: 'rice-gnome rice-gnome-nord',
-    credit: 'Nord on GNOME Shell. Palette from nordtheme/nord.',
-    accent: '#88c0d0',
-    wallpaper: wallpaperUrl('snow-covered-mountains-northern-india.jpg'),
-    walls,
-    border: '#88c0d0',
-    dotsSample: `/* Nord GNOME */\naccent_color=#88c0d0\n`,
-    terminal: 'kgx',
-  },
-  'gnome-graphite': {
-    id: 'gnome-graphite',
-    label: 'GNOME Graphite',
-    skin: 'gnome',
-    chrome: 'gnome',
-    className: 'rice-gnome rice-gnome-graphite',
-    credit: 'Graphite GTK look (vinceliuice/Graphite-gtk-theme). Colors only.',
-    accent: '#6c8eef',
-    wallpaper: wallpaperUrl('bridge-sea-middle-mountains.jpg'),
-    walls,
-    border: '#6c8eef',
-    dotsSample: `/* Graphite GTK */\naccent_color=#6c8eef\n`,
-    terminal: 'kgx',
-  },
-  'kde-breeze': {
-    id: 'kde-breeze',
-    label: 'Plasma Breeze',
-    skin: 'kde',
-    chrome: 'kde',
-    className: 'rice-kde rice-kde-breeze',
-    credit: 'Stock Breeze Dark panel. Plasma chrome only, visual LARP.',
-    accent: '#3daee9',
+    className: 'rice-gnome-sweet',
+    credit: 'EliverLara/Sweet gnome-shell. Candy teal on #222e39.',
+    accent: '#00e8b7',
     wallpaper: wallpaperUrl('sea-horizon-sky.jpg'),
-    walls,
-    border: '#3daee9',
-    dotsSample: `/* Breeze Dark */\nAccentColor=#3daee9\n`,
-    terminal: 'konsole',
+    walls: SHARED_WALLS,
+    border: '#00e8b7',
+    dotsSample: `/* EliverLara/Sweet */
+#panel { background-color: rgba(34, 46, 57, 0.95); }
+accent = #00e8b7
+`,
+    terminal: 'gnome-terminal',
   },
-  'kde-sweet': {
-    id: 'kde-sweet',
-    label: 'Plasma Sweet',
+  'kde-socrates': {
+    id: 'kde-socrates',
+    label: 'Socrates',
     skin: 'kde',
-    chrome: 'kde',
-    className: 'rice-kde rice-kde-sweet',
-    credit: 'Sweet look (EliverLara/Sweet). Colors only.',
-    accent: '#c74dca',
-    wallpaper: wallpaperUrl('kita.png'),
-    walls,
-    border: '#c74dca',
-    dotsSample: `/* Sweet Plasma */\nAccentColor=#c74dca\n`,
-    terminal: 'konsole',
-  },
-  'kde-nordic': {
-    id: 'kde-nordic',
-    label: 'Plasma Nordic',
-    skin: 'kde',
-    chrome: 'kde',
-    className: 'rice-kde rice-kde-nordic',
-    credit: 'Nordic / Nord Plasma look. Palette from nordtheme/nord.',
-    accent: '#88c0d0',
+    chrome: 'socrates',
+    className: 'rice-kde-socrates',
+    credit: 'prudhvibungatavula/socrates-KDE. Waybar on Plasma Wayland.',
+    accent: '#61afef',
     wallpaper: wallpaperUrl('snow-covered-mountains-northern-india.jpg'),
-    walls,
-    border: '#88c0d0',
-    dotsSample: `/* Nordic Plasma */\nAccentColor=#88c0d0\n`,
+    walls: SHARED_WALLS,
+    border: '#56b6c2',
+    dotsSample: `/* socrates-KDE waybar */
+window#waybar { background: #282c34; border: 3px solid #61afef; }
+height = 48
+`,
     terminal: 'konsole',
   },
   'kde-catppuccin': {
     id: 'kde-catppuccin',
-    label: 'Plasma Catppuccin',
+    label: 'Catppuccin Plasma',
     skin: 'kde',
     chrome: 'kde',
-    className: 'rice-kde rice-kde-catppuccin',
-    credit: 'Catppuccin Mocha for Plasma (catppuccin/kde). Colors only.',
+    className: 'rice-kde-catppuccin',
+    credit: 'catppuccin/kde Mocha Mauve. Breeze panel, kickoff, tasks.',
     accent: '#cba6f7',
     wallpaper: wallpaperUrl('misty-seascape.jpg'),
-    walls,
+    walls: SHARED_WALLS,
     border: '#cba6f7',
-    dotsSample: `/* Catppuccin Plasma */\nAccentColor=#cba6f7\n`,
-    terminal: 'konsole',
-  },
-  'kde-layan': {
-    id: 'kde-layan',
-    label: 'Plasma Layan',
-    skin: 'kde',
-    chrome: 'kde',
-    className: 'rice-kde rice-kde-layan',
-    credit: 'Layan look (vinceliuice/Layan-kde). Colors only.',
-    accent: '#5654d1',
-    wallpaper: wallpaperUrl('deep-forest-with-wooden-stairs.png'),
-    walls,
-    border: '#5654d1',
-    dotsSample: `/* Layan Plasma */\nAccentColor=#5654d1\n`,
+    dotsSample: `/* catppuccin/kde CatppuccinMochaMauve */
+[Colors:Header] BackgroundNormal=24,24,37
+[Colors:Selection] BackgroundNormal=203,166,247
+[WM] activeBackground=30,30,46
+`,
     terminal: 'konsole',
   },
 }
 
+export const RICE_LIST: RicePack[] = [
+  RICES.viegphunt,
+  RICES.hakuspace,
+  RICES.end4,
+  RICES['gnome-amethyst'],
+  RICES['gnome-sweet'],
+  RICES['kde-socrates'],
+  RICES['kde-catppuccin'],
+]
+
 export function riceById(id: RiceId): RicePack {
-  return RICES[id] ?? RICES.default
+  return RICES[id]
 }
 
 export function isRiceId(value: string): value is RiceId {
-  return Object.prototype.hasOwnProperty.call(RICES, value)
-}
-
-export function ricesForSkin(skin: Skin): RicePack[] {
-  return (Object.values(RICES) as RicePack[]).filter((r) => r.skin === skin)
-}
-
-export function firstRiceForSkin(skin: Skin): RicePack {
-  return ricesForSkin(skin)[0] ?? RICES.default
-}
-
-export const SKIN_ORDER: Skin[] = ['hyprland', 'gnome', 'kde']
-
-export const SKIN_LABEL: Record<Skin, string> = {
-  hyprland: 'Hyprland',
-  gnome: 'GNOME',
-  kde: 'KDE Plasma',
+  return value in RICES
 }
 
 export type BootEntry =
+  | { kind: 'heading'; label: string }
   | { kind: 'os'; rice: RiceId; label: string; hint: string }
   | { kind: 'firmware'; label: string; hint: string }
 
-export const BOOT_ENTRIES: BootEntry[] = [
-  { kind: 'os', rice: 'default', label: 'Arch Linux', hint: 'Hyprland' },
-  { kind: 'os', rice: 'viegphunt', label: 'Arch Linux (ViegPhunt)', hint: 'Catppuccin waybar' },
-  { kind: 'os', rice: 'mocha-alt', label: 'Arch Linux (Mocha Alt)', hint: 'Hyprland' },
-  { kind: 'os', rice: 'hakuspace', label: 'Arch Linux (Hakuspace)', hint: 'island bar' },
-  { kind: 'os', rice: 'end4', label: 'Arch Linux (end4-pC)', hint: 'Material 3' },
-  { kind: 'os', rice: 'hyde', label: 'Arch Linux (HyDE)', hint: 'hyprdots' },
-  { kind: 'os', rice: 'tokyo-hypr', label: 'Arch Linux (Tokyo Night)', hint: 'Hyprland' },
-  { kind: 'os', rice: 'nord-hypr', label: 'Arch Linux (Nord)', hint: 'Hyprland' },
-  { kind: 'os', rice: 'gnome-adwaita', label: 'GNOME', hint: 'Adwaita Dark' },
-  { kind: 'os', rice: 'gnome-catppuccin', label: 'GNOME (Catppuccin)', hint: 'Mocha' },
-  { kind: 'os', rice: 'gnome-tokyonight', label: 'GNOME (Tokyo Night)', hint: 'GTK' },
-  { kind: 'os', rice: 'gnome-nord', label: 'GNOME (Nord)', hint: 'frost' },
-  { kind: 'os', rice: 'gnome-graphite', label: 'GNOME (Graphite)', hint: 'GTK' },
-  { kind: 'os', rice: 'kde-breeze', label: 'KDE Plasma', hint: 'Breeze Dark' },
-  { kind: 'os', rice: 'kde-sweet', label: 'KDE Plasma (Sweet)', hint: 'candy' },
-  { kind: 'os', rice: 'kde-nordic', label: 'KDE Plasma (Nordic)', hint: 'frost' },
-  { kind: 'os', rice: 'kde-catppuccin', label: 'KDE Plasma (Catppuccin)', hint: 'Mocha' },
-  { kind: 'os', rice: 'kde-layan', label: 'KDE Plasma (Layan)', hint: 'purple' },
-  { kind: 'firmware', label: 'UEFI Firmware Settings', hint: 'setup' },
-]
+const BOOT_HINT: Record<RiceId, string> = {
+  viegphunt: 'Catppuccin waybar',
+  hakuspace: 'island bar',
+  end4: 'Material 3',
+  'gnome-amethyst': 'Mocha',
+  'gnome-sweet': 'candy',
+  'kde-socrates': 'waybar',
+  'kde-catppuccin': 'Mocha Mauve',
+}
+
+export const BOOT_ENTRIES: BootEntry[] = (() => {
+  const entries: BootEntry[] = []
+  let lastSkin: Skin | undefined
+  for (const rice of RICE_LIST) {
+    if (rice.skin !== lastSkin) {
+      entries.push({ kind: 'heading', label: SKIN_LABEL[rice.skin] })
+      lastSkin = rice.skin
+    }
+    entries.push({
+      kind: 'os',
+      rice: rice.id,
+      label: `Arch Linux (${rice.label})`,
+      hint: BOOT_HINT[rice.id],
+    })
+  }
+  entries.push({ kind: 'firmware', label: 'UEFI Firmware Settings', hint: 'setup' })
+  return entries
+})()
+
+export function bootEntrySelectable(entry: BootEntry): boolean {
+  return entry.kind !== 'heading'
+}
+
+export function firstBootIndex(): number {
+  const i = BOOT_ENTRIES.findIndex(bootEntrySelectable)
+  return i < 0 ? 0 : i
+}
+
+export function lastBootIndex(): number {
+  for (let i = BOOT_ENTRIES.length - 1; i >= 0; i--) {
+    const entry = BOOT_ENTRIES[i]
+    if (entry && bootEntrySelectable(entry)) return i
+  }
+  return 0
+}
+
+export function stepBootIndex(from: number, dir: 1 | -1): number {
+  let i = from + dir
+  while (i >= 0 && i < BOOT_ENTRIES.length) {
+    const entry = BOOT_ENTRIES[i]
+    if (entry && bootEntrySelectable(entry)) return i
+    i += dir
+  }
+  return from
+}

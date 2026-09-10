@@ -100,10 +100,10 @@ export function End4Chrome({
           <button type="button" className="end4-clock" title="Clock / keybinds" onClick={onClock}>
             {clock}
           </button>
-          <button type="button" className="end4-ico" title="Wi-Fi (LARP)" onClick={onToggleWifi}>
+          <button type="button" className="end4-ico" title="Wi-Fi" onClick={onToggleWifi}>
             {wifiOn ? 'wifi' : 'wifi_off'}
           </button>
-          <button type="button" className="end4-ico" title="Volume (LARP)" onClick={onToggleVol}>
+          <button type="button" className="end4-ico" title="Volume" onClick={onToggleVol}>
             {volMuted ? 'volume_off' : 'volume_up'}
           </button>
         </div>
@@ -113,16 +113,16 @@ export function End4Chrome({
           <div className="end4-big-time">{ptime}</div>
           <div className="end4-card-sub">{clock}</div>
         </button>
-        <button type="button" className="end4-card end4-weather-card" onClick={onWeather} title="Weather (LARP)">
+        <button type="button" className="end4-card end4-weather-card" onClick={onWeather} title="Weather">
           <div className="end4-weather-temp">{weatherTemp}°C</div>
           <div className="end4-card-sub">partly cloudy · LARP City</div>
           <div className="end4-weather-meta">48% · 3 m/s</div>
         </button>
-        <button type="button" className="end4-card end4-user-card" title="User (LARP)" onClick={onUser}>
+        <button type="button" className="end4-card end4-user-card" title="User" onClick={onUser}>
           <div className="end4-avatar">{(displayName || 'L').charAt(0).toUpperCase()}</div>
           <div>
             <div className="end4-hi">Hi, {displayName}</div>
-            <div className="end4-card-sub">Good evening · visual LARP</div>
+            <div className="end4-card-sub">Good evening</div>
           </div>
         </button>
       </aside>

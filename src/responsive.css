@@ -43,6 +43,11 @@ svg {
   max-width: calc(100vw - 1.5rem);
 }
 
+@media (max-width: 1100px) {
+  .rice-kde-socrates .soc-vpn,
+  .rice-kde-socrates .soc-mic { display: none; }
+}
+
 @media (max-width: 980px) {
   .setup-grid {
     grid-template-columns: 1fr;
@@ -58,8 +63,28 @@ svg {
   .rice-viegphunt .wb.tray,
   .rice-viegphunt .wb.bt { display: none; }
 
-  .hyprbar-mod { display: none; }
-  .kde-who { display: none; }
+  .rice-kde-socrates .soc-vpn,
+  .rice-kde-socrates .soc-mic,
+  .rice-kde-socrates .soc-bt,
+  .rice-kde-socrates .soc-net,
+  .rice-kde-socrates .soc-bat,
+  .rice-kde-socrates .soc-bright { display: none; }
+  .rice-kde-socrates .soc-mod {
+    padding: 2px 6px;
+    margin: 5px 3px;
+  }
+
+  .rice-gnome-amethyst .gnome-user,
+  .rice-gnome-sweet .gnome-user,
+  .rice-gnome-amethyst .gnome-app-menu,
+  .rice-gnome-sweet .gnome-app-menu { display: none; }
+  .rice-gnome-amethyst .gnome-activities,
+  .rice-gnome-sweet .gnome-activities { padding: 0 8px; }
+
+  .rice-kde-catppuccin .kde-pager,
+  .rice-kde-catppuccin .kde-tray-btn[title="Bluetooth"],
+  .rice-kde-catppuccin .kde-tray-btn[title="Battery"] { display: none; }
+
   .end4-media-text { display: none; }
 }
 
@@ -78,39 +103,47 @@ svg {
   .arch-ascii { display: none; }
 
   .panel {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow: hidden;
     gap: 0.35rem;
   }
   .panel-left,
   .panel-right {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    min-width: 0;
   }
   .panel-right span:first-child { display: none; }
+  .rice-viegphunt .wb.net,
+  .rice-viegphunt .wb.bat { display: none; }
+  .rice-viegphunt .wb.clock { white-space: nowrap; }
 
   .rice-hakuspace .haku-bar {
-    flex-wrap: wrap;
-    position: absolute;
-    height: auto;
+    flex-wrap: nowrap;
+    overflow: hidden;
   }
   .rice-hakuspace .haku-left-stack,
   .rice-hakuspace .haku-right-stack {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    min-width: 0;
   }
-  .rice-hakuspace .haku-adjusters .haku-mod:nth-child(1),
+  .rice-hakuspace .haku-adjusters,
+  .rice-hakuspace .haku-workspaces,
+  .rice-hakuspace .haku-tools,
   .rice-hakuspace .haku-tools .haku-mod.nf-bolt,
   .rice-hakuspace .haku-tools .haku-mod.nf-rec { display: none; }
+  .rice-hakuspace .haku-clock { white-space: nowrap; }
+  .rice-hakuspace .haku-dock { display: none; }
+  .rice-hakuspace .windows { bottom: 8px; }
 
   .rice-end4 .end4-bar {
-    flex-wrap: wrap;
-    height: auto;
+    flex-wrap: nowrap;
+    overflow: hidden;
     padding: 0.45rem 0.7rem;
   }
-  .rice-end4 .end4-right { flex-wrap: wrap; justify-content: flex-end; }
-
-  .gnome-appmenu,
-  .gnome-ws { display: none; }
-
-  .kde-task { padding: 0.3rem 0.5rem; }
+  .rice-end4 .end4-right { flex-wrap: nowrap; justify-content: flex-end; min-width: 0; }
+  .rice-end4 .end4-media,
+  .rice-end4 .end4-desk,
+  .rice-end4 .end4-ws-label { display: none; }
 
   .windows {
     overflow: auto;
@@ -129,8 +162,68 @@ svg {
     width: calc(100% - 0.8rem) !important;
     min-height: 0;
   }
+
+  .rice-gnome-amethyst .gnome-dash,
+  .rice-gnome-sweet .gnome-dash,
+  .shell:has(> .export-bar) .rice-gnome-sweet .gnome-dash { display: none; }
+  .rice-gnome-amethyst .gnome-panel-left,
+  .rice-gnome-sweet .gnome-panel-left {
+    min-width: 0;
+    overflow: hidden;
+  }
+  .rice-gnome-amethyst .windows {
+    left: 8px;
+    top: 40px;
+    bottom: 8px;
+  }
+  .rice-gnome-sweet .windows {
+    top: 40px;
+    bottom: 8px;
+  }
+  .rice-gnome-amethyst .gnome-ws-dots,
+  .rice-gnome-sweet .gnome-ws-dots,
+  .rice-gnome-amethyst .gnome-panel-right,
+  .rice-gnome-sweet .gnome-panel-right { display: none; }
+
+  .rice-kde-socrates .socrates-bar {
+    height: 44px;
+    overflow: hidden;
+    top: 4px;
+    left: 6px;
+    right: 6px;
+  }
+  .rice-kde-socrates .soc-power,
+  .rice-kde-socrates .soc-asus,
+  .rice-kde-socrates .soc-vol { display: none; }
+  .rice-kde-socrates .soc-clock i { display: none; }
+  .rice-kde-socrates .soc-clock {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .rice-kde-socrates .windows {
+    top: 54px;
+    left: 6px;
+    right: 6px;
+    bottom: 8px;
+  }
+  .rice-kde-socrates .soc-ws { font-size: 15px; padding: 0 4px; }
+
+  .rice-kde-catppuccin .kde-tray-btn:not([title="Leave"]) { display: none; }
+  .rice-kde-catppuccin .windows,
+  .shell:has(> .export-bar) .rice-kde-catppuccin .windows {
+    inset: 8px;
+    bottom: 48px;
+  }
+  .shell:has(> .export-bar) .rice-kde-catppuccin .kde-panel {
+    bottom: 0;
+  }
+  .export-bar.rice-kde-catppuccin,
+  .export-peek.rice-kde-catppuccin {
+    bottom: 52px;
+  }
   .icons { display: none; }
-  .gnome-dash { display: none; }
 
   .export-bar,
   .export-peek {
@@ -139,10 +232,6 @@ svg {
     bottom: 0.5rem;
     max-height: 28dvh;
     overflow: auto;
-  }
-  .export-bar.rice-kde,
-  .export-peek.rice-kde {
-    bottom: 3.4rem;
   }
   .export-bar button {
     padding: 0.4rem 0.65rem;
@@ -159,6 +248,7 @@ svg {
   .wall-picker,
   .launcher-overlay,
   .keybind-overlay,
+  .wlogout-overlay,
   .lyrics-overlay {
     padding: 0.6rem;
     align-items: end;
@@ -181,19 +271,15 @@ svg {
 @media (max-width: 480px) {
   h1 { font-size: 1.35rem; }
   .setup-tag { display: none; }
-  .hyprbar {
-    top: 4px;
-    left: 4px;
-    right: 4px;
-    flex-wrap: wrap;
-  }
-  .gnome-dash-btn { width: 36px; height: 36px; }
   .rice-end4 .end4-media { display: none; }
   .keybind-list li {
     flex-direction: column;
     gap: 0.15rem;
   }
   .shell-out { max-height: 160px; }
+  .rice-gnome-amethyst .gnome-activities,
+  .rice-gnome-sweet .gnome-activities { font-size: 11px; padding: 0 6px; }
+  .rice-kde-socrates .soc-clock { font-size: 11px; padding: 1px 4px; margin: 4px 2px; }
 }
 
 @media (max-height: 520px) and (orientation: landscape) {

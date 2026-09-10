@@ -5,7 +5,7 @@ Client-side web studio for fake Linux desktops. Target use: take a convincing sc
 
 ## Loop
 1. Landing → **Start LARPing**
-2. Setup: DE + name + hostname + wallpaper + accent
+2. Setup: rice + name + hostname + wallpaper + accent
 3. Fake desktop: bar, icons, draggable windows (terminal neofetch, empty browser, empty files)
 4. Optional: paste dots → best-effort rice (colors/layout tokens only)
 5. **Export** PNG (story / square / wide)
@@ -17,11 +17,11 @@ Client-side web studio for fake Linux desktops. Target use: take a convincing sc
 Limine-style boot menu over an Arch gradient. Arrow keys select a rice, Enter boots the desktop, `e` opens setup. Honest footer: you are not installing Arch.
 
 ### Setup (sidebar or sheet)
-- Skin: Hyprland | GNOME | KDE Plasma
+- Skin: rice pack. Hyprland, GNOME, or Plasma.
 - Identity: display name, `user@host`, fake neofetch (CPU/GPU/WM)
 - Wallpaper: URL or upload
 - Accent color
-- Dots: textarea / drop `.conf` / CSS (hyprland colors, waybar, gtk/kde hints)
+- Dots: textarea / drop `.conf` / CSS (hyprland colors, waybar)
 
 ### Stage (fullscreen desktop)
 - Wallpaper + DE chrome
@@ -33,7 +33,7 @@ Limine-style boot menu over an Arch gradient. Arrow keys select a rice, Enter bo
 No pacman, no real Wayland/Hyprland, no executing configs, no auth, no backend, no telemetry. Partial parse → show *best-effort rice* and continue.
 
 ## MVP ship bar
-- 3 recognizable skins in a photo
+- 7 recognizable rices in a photo (Hyprland, GNOME, Plasma)
 - Identity + wallpaper + accent
 - Fake terminal neofetch
 - Export PNG (story + square)

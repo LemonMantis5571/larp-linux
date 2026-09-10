@@ -3,6 +3,8 @@ import { clipTitle, type LarpTrack } from './music'
 import type { AppId, WorkspaceId } from './types'
 import { WORKSPACE_IDS } from './workspaces'
 
+export type PowerProfile = 'performance' | 'balanced' | 'power-saver'
+
 export function HakuChrome({
   workspace,
   goWorkspace,
@@ -15,6 +17,9 @@ export function HakuChrome({
   cavaLevels,
   monitorOpen,
   openApps,
+  powerProfile,
+  recLabel,
+  recOn,
   onLauncher,
   onSettings,
   onClock,
@@ -25,7 +30,11 @@ export function HakuChrome({
   onToggleVol,
   onBattery,
   onPower,
-  onToggleApp,
+  onOpenApp,
+  onTrayFiles,
+  onTrayClip,
+  onPowerProfile,
+  onToggleRec,
 }: {
   workspace: WorkspaceId
   goWorkspace: (id: WorkspaceId) => void
@@ -38,6 +47,9 @@ export function HakuChrome({
   cavaLevels: number[]
   monitorOpen: boolean
   openApps: AppId[]
+  powerProfile: PowerProfile
+  recLabel: string
+  recOn: boolean
   onLauncher: () => void
   onSettings: () => void
   onClock: () => void
@@ -48,7 +60,11 @@ export function HakuChrome({
   onToggleVol: () => void
   onBattery: () => void
   onPower: () => void
-  onToggleApp: (app: AppId) => void
+  onOpenApp: (app: AppId) => void
+  onTrayFiles: () => void
+  onTrayClip: () => void
+  onPowerProfile: () => void
+  onToggleRec: () => void
 }) {
   return (
     <>
@@ -72,7 +88,7 @@ export function HakuChrome({
             </div>
           </div>
           <div className="haku-box haku-musics">
-            <span className="haku-cava-ico nf-note" title="Music Visualizer" />
+            <button type="button" className="haku-cava-ico nf-note" title="Play / pause" onClick={onToggleMusic} />
             <button type="button" className="haku-cava" title="cava" onClick={onToggleMusic}>
               <CavaBars levels={cavaLevels} />
             </button>
@@ -122,13 +138,24 @@ export function HakuChrome({
           </div>
           <div className="haku-box haku-trays">
             <span className="haku-tray" title="Tray">
-              <i className="nf-pkg" />
-              <i className="nf-clip" />
+              <button type="button" className="haku-tray-btn nf-pkg" title="Files" onClick={onTrayFiles} />
+              <button type="button" className="haku-tray-btn nf-clip" title="Clipboard" onClick={onTrayClip} />
             </span>
           </div>
           <div className="haku-box haku-tools">
-            <span className="haku-mod nf-bolt" title="Power profile" />
-            <span className="haku-mod nf-rec" title="Stop recording" />
+            <button
+              type="button"
+              className="haku-mod nf-bolt"
+              title={`Power profile · ${powerProfile}`}
+              onClick={onPowerProfile}
+            />
+            <button
+              type="button"
+              className={`haku-mod nf-rec${recOn ? ' on' : ''}`}
+              title={recOn ? `Stop recording ${recLabel}` : 'Start recording'}
+              onClick={onToggleRec}
+            />
+            {recOn ? <span className="haku-mod haku-rectime">{recLabel}</span> : null}
             <button type="button" className="haku-mod nf-power" title="Power Menu" onClick={onPower} />
             <button type="button" className="haku-mod nf-bell" title="Notifications" onClick={onClock} />
           </div>
@@ -142,7 +169,7 @@ export function HakuChrome({
         <button
           type="button"
           className={`haku-dock-btn${openApps.includes('terminal') ? ' on' : ''}`}
-          onClick={() => onToggleApp('terminal')}
+          onClick={() => onOpenApp('terminal')}
           title="terminal"
         >
           <i className="nf-term" />
@@ -150,7 +177,7 @@ export function HakuChrome({
         <button
           type="button"
           className={`haku-dock-btn${openApps.includes('files') ? ' on' : ''}`}
-          onClick={() => onToggleApp('files')}
+          onClick={() => onOpenApp('files')}
           title="files"
         >
           <i className="nf-folder" />
@@ -158,7 +185,7 @@ export function HakuChrome({
         <button
           type="button"
           className={`haku-dock-btn${openApps.includes('browser') ? ' on' : ''}`}
-          onClick={() => onToggleApp('browser')}
+          onClick={() => onOpenApp('browser')}
           title="browser"
         >
           <i className="nf-web" />

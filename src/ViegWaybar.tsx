@@ -15,6 +15,8 @@ export function ViegWaybar({
   onBattery,
   onToggleVol,
   onClock,
+  onTrayFiles,
+  onTrayClip,
 }: {
   workspace: WorkspaceId
   goWorkspace: (id: WorkspaceId) => void
@@ -29,11 +31,13 @@ export function ViegWaybar({
   onBattery: () => void
   onToggleVol: () => void
   onClock: () => void
+  onTrayFiles: () => void
+  onTrayClip: () => void
 }) {
   return (
     <div className="panel waybar">
       <div className="panel-left">
-        <button type="button" className="wb power" title="wlogout (LARP)" onClick={onPower}>
+        <button type="button" className="wb power" title="wlogout" onClick={onPower}>
           <i className="nf-power-dot" />
         </button>
         <div className="workspaces">
@@ -50,24 +54,26 @@ export function ViegWaybar({
         </div>
       </div>
       <div className="panel-right">
-        <span className="wb tray" title="Tray">
+        <button type="button" className="wb tray" title="Files" onClick={onTrayFiles}>
           <i className="nf-pkg" />
+        </button>
+        <button type="button" className="wb tray" title="Clipboard" onClick={onTrayClip}>
           <i className="nf-clip" />
-        </span>
-        <button type="button" className="wb bt" title="blueman-manager (LARP)" onClick={onToggleBt}>
+        </button>
+        <button type="button" className="wb bt" title="blueman-manager" onClick={onToggleBt}>
           <i className={btOn ? 'nf-bt' : 'nf-bt-off'} />
         </button>
-        <button type="button" className="wb net" title="Wi-Fi (LARP)" onClick={onToggleWifi}>
+        <button type="button" className="wb net" title="Wi-Fi" onClick={onToggleWifi}>
           <i className={wifiOn ? 'nf-wifi' : 'nf-warn'} /> {wifiOn ? 'LARP-NET' : 'Disconnected'}
         </button>
-        <button type="button" className="wb bat" title="Battery (LARP)" onClick={onBattery}>
+        <button type="button" className="wb bat" title="Battery" onClick={onBattery}>
           <i className="nf-plug" /> 98%
         </button>
-        <button type="button" className="wb vol" title="pavucontrol (LARP)" onClick={onToggleVol}>
+        <button type="button" className="wb vol" title="pavucontrol" onClick={onToggleVol}>
           {/* upstream format-muted keeps the percentage, only the icon changes */}
           <i className={volMuted ? 'nf-mute' : 'nf-vol'} /> {volLevel}%
         </button>
-        <button type="button" className="wb clock" title="swaync (LARP)" onClick={onClock}>
+        <button type="button" className="wb clock" title="swaync" onClick={onClock}>
           {clock}
         </button>
       </div>

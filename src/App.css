@@ -202,11 +202,6 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   backdrop-filter: blur(10px);
   z-index: 5;
 }
-.skin-kde .panel { bottom: 0; top: auto; border-bottom: 0; border-top: 1px solid rgba(255,255,255,0.08); }
-.skin-gnome .panel { top: 0; justify-content: center; }
-.skin-gnome .panel-left, .skin-gnome .panel-right { position: absolute; }
-.skin-gnome .panel-left { left: 0.8rem; }
-.skin-gnome .panel-right { right: 0.8rem; }
 .panel-left, .panel-right { display: flex; gap: 0.55rem; align-items: center; flex-wrap: wrap; }
 .panel button { padding: 0.25rem 0.55rem; font-size: 0.85rem; }
 
@@ -217,23 +212,41 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  z-index: 2;
+  z-index: 4;
 }
-.skin-kde .icons { top: 1rem; }
 .icons button {
   width: 76px;
   background: transparent;
   border: 0;
+  color: inherit;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
   text-shadow: 0 1px 2px #000;
 }
-.icons span { font-size: 1.6rem; }
+.icons button.on {
+  text-shadow: 0 0 8px color-mix(in srgb, var(--accent, #89b4fa) 55%, #000);
+}
+.icons button.on::after {
+  content: "";
+  width: 18px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--accent, #89b4fa);
+}
+.app-icon {
+  display: block;
+  flex-shrink: 0;
+  max-width: none;
+  object-fit: contain;
+  pointer-events: none;
+}
 
-.windows { position: absolute; inset: 0; z-index: 3; }
+.windows { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 .window {
+  pointer-events: auto;
   position: absolute;
   width: min(520px, 80vw);
   min-height: 220px;
@@ -244,8 +257,8 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   overflow: hidden;
 }
 .skin-hyprland .window { border-radius: 14px; border-width: 2px; }
-.skin-gnome .window { border-radius: 10px; }
-.skin-kde .window { border-radius: 6px; }
+.skin-gnome .window { border-radius: 12px; }
+.skin-kde .window { border-radius: 6px; border-width: 1px; }
 .titlebar {
   display: flex;
   justify-content: space-between;
@@ -288,9 +301,6 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   border-radius: 14px;
   padding: 0.55rem;
 }
-.skin-kde .export-bar { bottom: 3.2rem; }
-
-/* —— The control bar wears the rice too —— */
 .export-bar.rice-viegphunt {
   background: color-mix(in srgb, #1e1e2e 88%, transparent);
   border: 1px solid rgba(245, 194, 231, 0.35);
@@ -307,9 +317,6 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
 }
 .export-bar.rice-viegphunt button:hover { background: rgba(88, 91, 112, 0.6); }
 .export-bar.rice-viegphunt button.primary { background: #f5c2e7; color: #1e1e2e; border-color: transparent; }
-
-.export-bar.rice-mocha-alt { border-color: rgba(137, 180, 250, 0.35); }
-.export-bar.rice-mocha-alt button.primary { background: #89b4fa; }
 
 .export-bar.rice-hakuspace {
   background: rgba(0, 0, 0, 0.8);
@@ -760,9 +767,14 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
 }
 .rice-hakuspace .toast { border-color: rgba(232, 220, 200, 0.45); color: #E8DCC8; }
 .rice-end4 .toast { border-color: rgba(203, 196, 203, 0.4); color: #e6e1e1; }
+.rice-gnome-amethyst .toast { border-color: rgba(203, 166, 247, 0.45); color: #cba6f7; }
+.rice-gnome-sweet .toast { border-color: rgba(0, 232, 183, 0.45); color: #00e8b7; }
+.rice-kde-socrates .toast { border-color: rgba(97, 175, 239, 0.45); color: #9cdef2; }
+.rice-kde-catppuccin .toast { border-color: rgba(203, 166, 247, 0.45); color: #cba6f7; }
 
 .launcher-overlay,
-.keybind-overlay {
+.keybind-overlay,
+.wlogout-overlay {
   position: absolute;
   inset: 0;
   z-index: 18;
@@ -853,4 +865,71 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   color: var(--accent, #f5c2e7);
   white-space: nowrap;
 }
+
+.wlogout-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+.wlogout-btn {
+  width: 7.5rem;
+  height: 7.5rem;
+  border: 1px solid rgba(205, 214, 244, 0.28);
+  border-radius: 12px;
+  background: rgba(17, 17, 27, 0.88);
+  color: #cdd6f4;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font: inherit;
+}
+.wlogout-btn:hover {
+  background: color-mix(in srgb, var(--accent, #f5c2e7) 28%, transparent);
+  border-color: var(--accent, #f5c2e7);
+}
+.wlogout-label { font-weight: 700; font-size: 1.05rem; }
+.wlogout-hint { opacity: 0.55; font-size: 0.75rem; }
+.rice-hakuspace .wlogout-btn { border-color: rgba(232, 220, 200, 0.35); color: #E8DCC8; }
+.rice-end4 .wlogout-btn { border-radius: 24px; }
+
+.sleep-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  border: 0;
+  background: #050508;
+  color: #4a4a55;
+  font: inherit;
+  letter-spacing: 0.4em;
+  text-transform: lowercase;
+  cursor: pointer;
+}
+
+.haku-tray-btn {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  line-height: 1;
+}
+button.haku-cava-ico {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.haku-mod.nf-rec.on {
+  color: #f38ba8;
+}
+.haku-rectime {
+  font-variant-numeric: tabular-nums;
+}
+
 

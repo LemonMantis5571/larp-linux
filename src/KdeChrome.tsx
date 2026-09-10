@@ -1,11 +1,15 @@
+import { AppIcon } from './AppIcon'
+import { appLabel } from './appIcons'
 import type { AppId, WorkspaceId } from './types'
 import { WORKSPACE_IDS } from './workspaces'
+
+const TASK_APPS: AppId[] = ['browser', 'files', 'terminal']
 
 export function KdeChrome({
   workspace,
   goWorkspace,
   clock,
-  displayName,
+  focusedApp,
   openApps,
   wifiOn,
   volMuted,
@@ -15,12 +19,14 @@ export function KdeChrome({
   onToggleWifi,
   onToggleVol,
   onToggleBt,
-  onToggleApp,
+  onBattery,
+  onOpenApp,
+  onPower,
 }: {
   workspace: WorkspaceId
   goWorkspace: (id: WorkspaceId) => void
   clock: string
-  displayName: string
+  focusedApp: AppId | null
   openApps: AppId[]
   wifiOn: boolean
   volMuted: boolean
@@ -30,64 +36,62 @@ export function KdeChrome({
   onToggleWifi: () => void
   onToggleVol: () => void
   onToggleBt: () => void
-  onToggleApp: (app: AppId) => void
+  onBattery: () => void
+  onOpenApp: (app: AppId) => void
+  onPower: () => void
 }) {
   return (
-    <div className="kde-panel" aria-label="Plasma panel">
+    <div className="kde-panel">
       <button type="button" className="kde-kickoff" title="Application Launcher" onClick={onLauncher}>
-        <svg viewBox="0 0 24 24" aria-hidden>
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 4.2l7.2 15.4H4.8L12 4.2z" />
-        </svg>
+        <i className="nf-grid" />
       </button>
-      <div className="kde-tasks">
-        <button
-          type="button"
-          className={`kde-task${openApps.includes('terminal') ? ' on' : ''}`}
-          onClick={() => onToggleApp('terminal')}
-        >
-          Konsole
-        </button>
-        <button
-          type="button"
-          className={`kde-task${openApps.includes('browser') ? ' on' : ''}`}
-          onClick={() => onToggleApp('browser')}
-        >
-          Firefox
-        </button>
-        <button
-          type="button"
-          className={`kde-task${openApps.includes('files') ? ' on' : ''}`}
-          onClick={() => onToggleApp('files')}
-        >
-          Dolphin
-        </button>
-      </div>
-      <div className="kde-ws">
+      <div className="kde-pager" aria-label="Virtual desktops">
         {WORKSPACE_IDS.map((id) => (
           <button
             key={id}
             type="button"
-            className={`kde-ws-btn${workspace === id ? ' active' : ''}`}
+            className={`kde-pager-cell${workspace === id ? ' active' : ''}`}
             onClick={() => goWorkspace(id)}
           >
             {id}
           </button>
         ))}
       </div>
+      <div className="kde-tasks">
+        {TASK_APPS.map((app) => {
+          const running = openApps.includes(app)
+          const focused = focusedApp === app
+          return (
+            <button
+              key={app}
+              type="button"
+              className={`kde-task${running ? ' running' : ''}${focused ? ' focused' : ''}`}
+              aria-label={appLabel({ app, skin: 'kde' })}
+              onClick={() => onOpenApp(app)}
+            >
+              <AppIcon app={app} size={28} skin="kde" />
+            </button>
+          )
+        })}
+      </div>
       <div className="kde-tray">
-        <button type="button" className="kde-ico" title="Bluetooth" onClick={onToggleBt}>
-          {btOn ? 'bluetooth' : 'bluetooth_disabled'}
+        <button type="button" className="kde-tray-btn" title="Bluetooth" onClick={onToggleBt}>
+          <i className={btOn ? 'nf-bt' : 'nf-bt-off'} />
         </button>
-        <button type="button" className="kde-ico" title="Network" onClick={onToggleWifi}>
-          {wifiOn ? 'wifi' : 'wifi_off'}
+        <button type="button" className="kde-tray-btn" title="Wi-Fi" onClick={onToggleWifi}>
+          <i className={wifiOn ? 'nf-wifi' : 'nf-wifi-off'} />
         </button>
-        <button type="button" className="kde-ico" title="Volume" onClick={onToggleVol}>
-          {volMuted ? 'volume_off' : 'volume_up'}
+        <button type="button" className="kde-tray-btn" title="Volume" onClick={onToggleVol}>
+          <i className={volMuted ? 'nf-mute' : 'nf-vol'} />
         </button>
-        <span className="kde-who">{displayName}</span>
-        <button type="button" className="kde-clock" onClick={onClock} title="Clock / keybinds">
+        <button type="button" className="kde-tray-btn" title="Battery" onClick={onBattery}>
+          <i className="nf-plug" />
+        </button>
+        <button type="button" className="kde-clock" title="Calendar" onClick={onClock}>
           {clock}
+        </button>
+        <button type="button" className="kde-tray-btn" title="Leave" onClick={onPower}>
+          <i className="nf-power" />
         </button>
       </div>
     </div>
