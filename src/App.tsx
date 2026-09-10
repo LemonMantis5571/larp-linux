@@ -9,7 +9,7 @@ import { WALLPAPERS, cycleWallpaper } from './wallpapers'
 import { cssBgUrl, hotlinkLikelyBlocked, normalizeWallUrl, probeImage } from './wallUrl'
 import { defaultPos, initialWorkspaces, switchWorkspace } from './workspaces'
 import { isTypingTarget } from './keybinds'
-import { runFakeCommand, type ShellContext } from './fakeShell'
+import { neofetchFacts, runFakeCommand, type ShellContext } from './fakeShell'
 import { Launcher, type LauncherAction } from './Launcher'
 import { KeybindOverlay } from './KeybindOverlay'
 import { ToastStack } from './ToastStack'
@@ -26,6 +26,7 @@ import { type PowerProfile } from './HakuChrome'
 import { GnomeChrome } from './GnomeChrome'
 import { KdeChrome } from './KdeChrome'
 import { SocratesBar, type AsusProfile } from './SocratesBar'
+import { applyInCharacterLines, termBanner, weatherPlace, wifiSsid } from './inCharacter'
 import './App.css'
 import './vendor/vieg-waybar.css'
 import './vendor/haku-island.css'
@@ -153,6 +154,7 @@ export default function App() {
     workspace: 1,
     workspaces: initialWorkspaces(),
     recordMode: false,
+    inCharacter: false,
   })
   const [clock, setClock] = useState(() => clockNow('vieg'))
   const [ptime, setPtime] = useState(promptTime)
@@ -164,9 +166,7 @@ export default function App() {
   const [recStartedAt, setRecStartedAt] = useState<number | null>(null)
   const [toasts, setToasts] = useState<Toast[]>([])
   const [focusedApp, setFocusedApp] = useState<AppId | null>('terminal')
-  const [termLines, setTermLines] = useState<string[]>([
-    'LARP shell ready. Type help — configs are never executed.',
-  ])
+  const [termLines, setTermLines] = useState<string[]>(() => termBanner(false))
   const [termInput, setTermInput] = useState('')
   const [volMuted, setVolMuted] = useState(false)
   const [btOn, setBtOn] = useState(true)
@@ -189,6 +189,7 @@ export default function App() {
   const track = LARP_TRACKS[trackIndex] ?? LARP_TRACKS[0]
 
   const pack = riceById(state.rice)
+  const inCharacter = Boolean(state.inCharacter)
   const isViegLike = pack.chrome === 'vieg'
   const isHaku = pack.chrome === 'haku'
   const isEnd4 = pack.chrome === 'end4'
@@ -257,8 +258,9 @@ export default function App() {
       cpu: state.identity.cpu,
       gpu: state.identity.gpu,
       terminalName: pack.terminal,
+      inCharacter,
     }
-  }, [state.identity, pack.label, pack.terminal])
+  }, [state.identity, pack.label, pack.terminal, inCharacter])
 
   const runShellLine = useCallback(
     (raw: string) => {
@@ -352,8 +354,8 @@ export default function App() {
   }, [pushToast])
 
   const toastBattery = useCallback(() => {
-    pushToast('Battery 98% · AC (fake)')
-  }, [pushToast])
+    pushToast(inCharacter ? 'Battery 98% · AC' : 'Battery 98% · AC (fake)')
+  }, [pushToast, inCharacter])
 
   const openClock = useCallback(() => {
     setShowLauncher(false)
@@ -415,7 +417,7 @@ export default function App() {
         return
       }
       positionsRef.current = {}
-      setTermLines(['LARP shell ready. Type help. Configs are never executed.'])
+      setTermLines(termBanner(inCharacter))
       setTermInput('')
       setFocusedApp('terminal')
       setShowLauncher(false)
@@ -432,7 +434,7 @@ export default function App() {
       }))
       pushToast('reboot')
     },
-    [pushToast],
+    [pushToast, inCharacter],
   )
 
   const cycleNextWorkspace = useCallback(() => {
@@ -446,10 +448,10 @@ export default function App() {
       const temps = [18, 22, 26, 29, 15, 31]
       const idx = temps.indexOf(t)
       const next = temps[(idx < 0 ? 0 : idx + 1) % temps.length]
-      pushToast(`${next}°C · LARP City`)
+      pushToast(`${next}°C · ${weatherPlace(inCharacter)}`)
       return next
     })
-  }, [pushToast])
+  }, [pushToast, inCharacter])
 
   const skipTrack = useCallback(
     (dir: 1 | -1) => {
@@ -792,20 +794,7 @@ export default function App() {
     pushToast,
   ])
 
-  const neofetchLines = useMemo(() => {
-    const i = state.identity
-    return [
-      { k: 'OS', v: 'Arch Linux x86_64' },
-      { k: 'Host', v: 'LARP Linux (not real)' },
-      { k: 'Kernel', v: '6.10.arch-larp' },
-      { k: 'WM', v: i.wm },
-      { k: 'CPU', v: i.cpu },
-      { k: 'GPU', v: i.gpu },
-      { k: 'Memory', v: '64 GiB (fake)' },
-      { k: 'Terminal', v: pack.terminal },
-      { k: 'Rice', v: `${pack.label} (LARP)` },
-    ]
-  }, [state.identity, pack.terminal, pack.label])
+  const neofetchLines = useMemo(() => neofetchFacts(shellCtx), [shellCtx])
 
   function applyRice(id: RiceId) {
     const next = riceById(id)
@@ -851,6 +840,12 @@ export default function App() {
     }))
   }
 
+  function toggleInCharacter() {
+    const next = !inCharacter
+    setState((s) => ({ ...s, inCharacter: next }))
+    setTermLines((lines) => applyInCharacterLines(lines, next))
+  }
+
   async function exportPng(preset: ExportPreset) {
     if (!stageRef.current) return
     lastPresetRef.current = preset
@@ -893,6 +888,7 @@ export default function App() {
         onSetup={() => setState((s) => ({ ...s, phase: 'setup' }))}
         onBoot={(id) => bootRice(id, 'stage')}
         onEdit={(id) => bootRice(id, 'setup')}
+        inCharacter={inCharacter}
       />
     )
   }
@@ -926,6 +922,17 @@ export default function App() {
           <p>No packages. No real DE. Dotfiles are never executed.</p>
         </header>
         <div className="setup-grid">
+          <label className="wide setup-check">
+            <input
+              type="checkbox"
+              checked={inCharacter}
+              onChange={toggleInCharacter}
+            />
+            <span>
+              In character
+              <small>Hide LARP disclaimers so the desktop looks like Arch</small>
+            </span>
+          </label>
           <label>
             Desktop
             <select
@@ -1102,6 +1109,7 @@ export default function App() {
             onClock={openClock}
             onTrayFiles={() => openApp('files')}
             onTrayClip={copyHost}
+            networkName={wifiSsid(inCharacter)}
           />
         ) : isHaku ? (
           <HakuChrome
@@ -1147,6 +1155,7 @@ export default function App() {
             musicPlaying={musicPlaying}
             track={track}
             weatherTemp={weatherTemp}
+            weatherPlace={weatherPlace(inCharacter)}
             displayName={state.identity.displayName}
             onLauncher={() => {
               setShowKeybinds(false)
@@ -1288,7 +1297,9 @@ export default function App() {
                         <i style={{ background: '#94e2d5' }} />
                         <i style={{ background: '#cdd6f4' }} />
                       </div>
-                      <p className="neo-disclaimer">you are not installing arch. you are larping.</p>
+                      {!inCharacter ? (
+                        <p className="neo-disclaimer">you are not installing arch. you are larping.</p>
+                      ) : null}
                     </div>
                   </div>
                 )}
@@ -1336,7 +1347,9 @@ export default function App() {
             >
               <div className="browser">
                 <div className="browser-bar">https://wiki.archlinux.org/</div>
-                <div className="browser-body">Empty LARP browser. Looks busy. Does nothing.</div>
+                <div className="browser-body">
+                  {inCharacter ? 'Welcome to Firefox' : 'Empty LARP browser. Looks busy. Does nothing.'}
+                </div>
               </div>
             </FakeWindow>
           )}
@@ -1357,7 +1370,7 @@ export default function App() {
                 <div>📁 .config</div>
                 <div>📁 .local</div>
                 <div>📁 Pictures</div>
-                <div>📄 rice.md</div>
+                <div>{inCharacter ? '📄 notes.txt' : '📄 rice.md'}</div>
               </div>
             </FakeWindow>
           )}
@@ -1399,9 +1412,16 @@ export default function App() {
         )}
 
         {showLauncher && (
-          <Launcher riceClass={riceClassName} onLaunch={handleLauncher} onClose={() => setShowLauncher(false)} />
+          <Launcher
+            riceClass={riceClassName}
+            inCharacter={inCharacter}
+            onLaunch={handleLauncher}
+            onClose={() => setShowLauncher(false)}
+          />
         )}
-        {showWlogout && <Wlogout onPick={handleWlogout} onClose={() => setShowWlogout(false)} />}
+        {showWlogout && (
+          <Wlogout inCharacter={inCharacter} onPick={handleWlogout} onClose={() => setShowWlogout(false)} />
+        )}
         {sleeping && (
           <button
             type="button"
@@ -1427,7 +1447,9 @@ export default function App() {
             onNext={() => skipTrack(1)}
           />
         )}
-        {showKeybinds && <KeybindOverlay onClose={() => setShowKeybinds(false)} />}
+        {showKeybinds && (
+          <KeybindOverlay inCharacter={inCharacter} onClose={() => setShowKeybinds(false)} />
+        )}
 
         <ToastStack toasts={toasts} />
       </div>
@@ -1492,6 +1514,14 @@ export default function App() {
           </button>
           <button onClick={() => exportPng('wide')} disabled={exporting}>
             Export wide
+          </button>
+          <button
+            type="button"
+            className={inCharacter ? 'primary' : undefined}
+            title={inCharacter ? 'Show LARP disclaimers' : 'Hide LARP disclaimers'}
+            onClick={toggleInCharacter}
+          >
+            In character
           </button>
           <button
             type="button"

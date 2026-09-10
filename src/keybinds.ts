@@ -4,7 +4,7 @@ export type KeybindEntry = {
 }
 
 /**
- * Prefer Ctrl over Super on Windows — Win+Space / Win+D / Win+1 are OS-owned
+ * Prefer Ctrl over Super on Windows. Win+Space / Win+D / Win+1 are OS-owned
  * and never reach the page.
  */
 export const KEYBINDS: KeybindEntry[] = [
@@ -26,6 +26,19 @@ export const KEYBINDS: KeybindEntry[] = [
   { keys: 'Type in terminal', action: 'Fake shell (clear, neofetch, ls…)' },
   { keys: '↑ ↓ Enter / e', action: 'Boot menu: select, boot, or edit' },
 ]
+
+export function keybindsFor(inCharacter: boolean): KeybindEntry[] {
+  if (!inCharacter) return KEYBINDS
+  return KEYBINDS.map((entry) => {
+    if (entry.keys === 'M') {
+      return { ...entry, action: 'Play / pause MPRIS. Not while the terminal is focused' }
+    }
+    if (entry.keys === 'Type in terminal') {
+      return { ...entry, action: 'Shell (clear, neofetch, ls…)' }
+    }
+    return entry
+  })
+}
 
 export function isTypingTarget(el: EventTarget | null): boolean {
   const tag = (el as HTMLElement | null)?.tagName

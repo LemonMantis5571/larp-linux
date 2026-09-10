@@ -7,6 +7,7 @@ export type ShellContext = {
   cpu: string
   gpu: string
   terminalName: string
+  inCharacter: boolean
 }
 
 const FUNNY = [
@@ -19,6 +20,20 @@ const FUNNY = [
   'wayland: compositor laughed politely and did nothing.',
 ]
 
+export function neofetchFacts(ctx: ShellContext): { k: string; v: string }[] {
+  return [
+    { k: 'OS', v: 'Arch Linux x86_64' },
+    { k: 'Host', v: ctx.inCharacter ? 'ASUS ROG Strix' : 'LARP Linux (not real)' },
+    { k: 'Kernel', v: ctx.inCharacter ? '6.16.4-arch1-1' : '6.10.arch-larp' },
+    { k: 'WM', v: ctx.wm },
+    { k: 'CPU', v: ctx.cpu },
+    { k: 'GPU', v: ctx.gpu },
+    { k: 'Memory', v: ctx.inCharacter ? '18432MiB / 32032MiB' : '64 GiB (fake)' },
+    { k: 'Terminal', v: ctx.terminalName },
+    { k: 'Rice', v: ctx.inCharacter ? ctx.riceLabel : `${ctx.riceLabel} (LARP)` },
+  ]
+}
+
 export function runFakeCommand(raw: string, ctx: ShellContext): string[] {
   const line = raw.trim()
   if (!line) return []
@@ -30,8 +45,11 @@ export function runFakeCommand(raw: string, ctx: ShellContext): string[] {
     return ['__CLEAR__']
   }
   if (lower === 'help') {
+    if (ctx.inCharacter) {
+      return ['Commands: clear, neofetch, fastfetch, ls, pwd, echo, help']
+    }
     return [
-      'LARP shell — visual only, never executes configs.',
+      'LARP shell. Visual only, never executes configs.',
       'Commands: clear, neofetch, fastfetch, ls, pwd, echo, help',
       'Anything else gets a funny LARP error.',
     ]
@@ -40,30 +58,30 @@ export function runFakeCommand(raw: string, ctx: ShellContext): string[] {
     return [ctx.cwd]
   }
   if (lower === 'ls') {
-    return ['.config  .local  Pictures  rice.md  Downloads  Music']
+    return [
+      ctx.inCharacter
+        ? '.config  .local  Pictures  Downloads  Music'
+        : '.config  .local  Pictures  rice.md  Downloads  Music',
+    ]
   }
   if (lower === 'echo') {
     return [arg]
   }
   if (lower === 'neofetch' || lower === 'fastfetch') {
-    return [
+    const rows = [
       `${ctx.username}@${ctx.hostname}`,
       '-----------------',
-      'OS: Arch Linux x86_64',
-      'Host: LARP Linux (not real)',
-      'Kernel: 6.10.arch-larp',
-      `WM: ${ctx.wm}`,
-      `CPU: ${ctx.cpu}`,
-      `GPU: ${ctx.gpu}`,
-      'Memory: 64 GiB (fake)',
-      `Terminal: ${ctx.terminalName}`,
-      `Rice: ${ctx.riceLabel}`,
-      '',
-      'you are not installing arch.',
-      'you are larping.',
+      ...neofetchFacts(ctx).map((row) => `${row.k}: ${row.v}`),
     ]
+    if (!ctx.inCharacter) {
+      rows.push('', 'you are not installing arch.', 'you are larping.')
+    }
+    return rows
   }
 
+  if (ctx.inCharacter) {
+    return [`zsh: command not found: ${cmd}`]
+  }
   const joke = FUNNY[Math.floor(Math.random() * FUNNY.length)]
   return [`${cmd}: ${joke}`]
 }

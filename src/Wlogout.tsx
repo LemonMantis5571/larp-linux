@@ -8,13 +8,24 @@ const ITEMS: { id: WlogoutAction; label: string; hint: string }[] = [
   { id: 'shutdown', label: 'Shutdown', hint: 'power off' },
 ]
 
+const IN_CHARACTER_ITEMS: { id: WlogoutAction; label: string; hint: string }[] = [
+  { id: 'lock', label: 'Lock', hint: 'lock screen' },
+  { id: 'logout', label: 'Logout', hint: 'end session' },
+  { id: 'sleep', label: 'Sleep', hint: 'suspend' },
+  { id: 'reboot', label: 'Reboot', hint: 'reboot' },
+  { id: 'shutdown', label: 'Shutdown', hint: 'power off' },
+]
+
 export function Wlogout({
   onPick,
   onClose,
+  inCharacter = false,
 }: {
   onPick: (id: WlogoutAction) => void
   onClose: () => void
+  inCharacter?: boolean
 }) {
+  const items = inCharacter ? IN_CHARACTER_ITEMS : ITEMS
   return (
     <div
       className="wlogout-overlay"
@@ -25,7 +36,7 @@ export function Wlogout({
       }}
     >
       <div className="wlogout-row">
-        {ITEMS.map((item) => (
+        {items.map((item) => (
           <button
             key={item.id}
             type="button"

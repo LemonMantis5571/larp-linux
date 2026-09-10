@@ -13,10 +13,12 @@ export function LimineLanding({
   onBoot,
   onSetup,
   onEdit,
+  inCharacter = false,
 }: {
   onBoot: (id: RiceId) => void
   onSetup: () => void
   onEdit: (id: RiceId) => void
+  inCharacter?: boolean
 }) {
   const [index, setIndex] = useState(firstBootIndex)
   const selected = BOOT_ENTRIES[index] ?? BOOT_ENTRIES[firstBootIndex()]
@@ -77,7 +79,7 @@ export function LimineLanding({
 
       <div className="limine-term">
         <header className="limine-brand">
-          <p className="limine-product">LARP Linux</p>
+          <p className="limine-product">{inCharacter ? 'Arch Linux' : 'LARP Linux'}</p>
           <p className="limine-bootloader">Limine 9.x</p>
         </header>
 
@@ -117,7 +119,9 @@ export function LimineLanding({
           <p>
             Press <kbd>enter</kbd> to boot, <kbd>e</kbd> to edit before boot.
           </p>
-          <p className="limine-timeout">timeout: disabled · you are not installing Arch</p>
+          <p className="limine-timeout">
+            {inCharacter ? 'timeout: disabled' : 'timeout: disabled · you are not installing Arch'}
+          </p>
           <button type="button" className="limine-firmware" onClick={onSetup}>
             UEFI Firmware Settings
           </button>

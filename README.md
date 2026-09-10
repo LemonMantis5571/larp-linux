@@ -92,6 +92,10 @@ The export bar and peek button are never in the shot. They live outside the
 captured node, they unmount before snapshot, and `data-larp-chrome` filters
 them too. Hide the bar with **H** and still export with **E**.
 
+**In character** (setup checkbox or the export bar) hides LARP disclaimers:
+neofetch, the shell banner, SSID, weather, launcher hints, and the boot
+timeout joke. The desktop then reads as Arch.
+
 ## Project layout
 
 ```

@@ -1,6 +1,13 @@
-import { KEYBINDS } from './keybinds'
+import { keybindsFor } from './keybinds'
 
-export function KeybindOverlay({ onClose }: { onClose: () => void }) {
+export function KeybindOverlay({
+  onClose,
+  inCharacter = false,
+}: {
+  onClose: () => void
+  inCharacter?: boolean
+}) {
+  const rows = keybindsFor(inCharacter)
   return (
     <div
       className="keybind-overlay"
@@ -16,7 +23,7 @@ export function KeybindOverlay({ onClose }: { onClose: () => void }) {
           <span className="wall-hint">Super+H · ? · Esc</span>
         </div>
         <ul className="keybind-list">
-          {KEYBINDS.map((k) => (
+          {rows.map((k) => (
             <li key={k.keys}>
               <kbd>{k.keys}</kbd>
               <span>{k.action}</span>

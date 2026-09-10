@@ -13,6 +13,7 @@ export function End4Chrome({
   musicPlaying,
   track,
   weatherTemp,
+  weatherPlace,
   displayName,
   onLauncher,
   onClock,
@@ -34,6 +35,7 @@ export function End4Chrome({
   musicPlaying: boolean
   track: LarpTrack
   weatherTemp: number
+  weatherPlace: string
   displayName: string
   onLauncher: () => void
   onClock: () => void
@@ -115,7 +117,7 @@ export function End4Chrome({
         </button>
         <button type="button" className="end4-card end4-weather-card" onClick={onWeather} title="Weather">
           <div className="end4-weather-temp">{weatherTemp}°C</div>
-          <div className="end4-card-sub">partly cloudy · LARP City</div>
+          <div className="end4-card-sub">partly cloudy · {weatherPlace}</div>
           <div className="end4-weather-meta">48% · 3 m/s</div>
         </button>
         <button type="button" className="end4-card end4-user-card" title="User" onClick={onUser}>

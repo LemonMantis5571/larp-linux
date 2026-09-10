@@ -112,6 +112,30 @@ button { cursor: pointer; border-radius: 10px; border: 1px solid rgba(255,255,25
   color: #9aa6b8;
 }
 .setup-grid .wide { grid-column: 1 / -1; }
+.setup-check {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.7rem;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f2f4f8;
+}
+.setup-check input[type="checkbox"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  max-width: 1.15rem;
+  margin-top: 0.2rem;
+  accent-color: var(--accent, #89b4fa);
+}
+.setup-check small {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: #9aa6b8;
+}
 .setup-grid input, .setup-grid select, .setup-grid textarea {
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.16);

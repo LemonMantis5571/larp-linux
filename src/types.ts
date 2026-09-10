@@ -54,4 +54,6 @@ export type AppState = {
   workspaces?: Record<WorkspaceId, WorkspaceSnap>
   /** Record mode: hide export bar + peek for video */
   recordMode?: boolean
+  /** Hide LARP disclaimers so screenshots look like Arch */
+  inCharacter?: boolean
 }

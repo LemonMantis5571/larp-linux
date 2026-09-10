@@ -17,6 +17,7 @@ export function ViegWaybar({
   onClock,
   onTrayFiles,
   onTrayClip,
+  networkName,
 }: {
   workspace: WorkspaceId
   goWorkspace: (id: WorkspaceId) => void
@@ -25,6 +26,7 @@ export function ViegWaybar({
   wifiOn: boolean
   volMuted: boolean
   volLevel: number
+  networkName: string
   onPower: () => void
   onToggleBt: () => void
   onToggleWifi: () => void
@@ -64,7 +66,7 @@ export function ViegWaybar({
           <i className={btOn ? 'nf-bt' : 'nf-bt-off'} />
         </button>
         <button type="button" className="wb net" title="Wi-Fi" onClick={onToggleWifi}>
-          <i className={wifiOn ? 'nf-wifi' : 'nf-warn'} /> {wifiOn ? 'LARP-NET' : 'Disconnected'}
+          <i className={wifiOn ? 'nf-wifi' : 'nf-warn'} /> {wifiOn ? networkName : 'Disconnected'}
         </button>
         <button type="button" className="wb bat" title="Battery" onClick={onBattery}>
           <i className="nf-plug" /> 98%
